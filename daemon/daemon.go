@@ -21,6 +21,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/exograd/go-daemon/influx"
 	"github.com/exograd/go-log"
 	"github.com/exograd/go-program"
 )
@@ -33,6 +34,8 @@ type DaemonCfg struct {
 
 	HTTPServers map[string]HTTPServerCfg
 	HTTPClients map[string]HTTPClientCfg
+
+	Influx *influx.ClientCfg
 }
 
 type Daemon struct {
@@ -45,6 +48,10 @@ type Daemon struct {
 
 	httpServers map[string]*HTTPServer
 	httpClients map[string]*HTTPClient
+
+	Influx *influx.Client
+
+	Hostname string
 
 	stopChan  chan struct{}
 	errorChan chan error
@@ -69,9 +76,11 @@ func (d *Daemon) init() error {
 	d.initDefaultLogger()
 
 	initFuncs := []func() error{
+		d.initHostname,
 		d.initLogger,
 		d.initHTTPServers,
 		d.initHTTPClients,
+		d.initInflux,
 	}
 
 	for _, initFunc := range initFuncs {
@@ -89,6 +98,17 @@ func (d *Daemon) init() error {
 
 func (d *Daemon) initDefaultLogger() {
 	d.Log = log.DefaultLogger(d.Cfg.name)
+}
+
+func (d *Daemon) initHostname() error {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return fmt.Errorf("cannot obtain hostname: %w", err)
+	}
+
+	d.Hostname = hostname
+
+	return nil
 }
 
 func (d *Daemon) initLogger() error {
@@ -140,6 +160,25 @@ func (d *Daemon) initHTTPClients() error {
 	return nil
 }
 
+func (d *Daemon) initInflux() error {
+	if d.Cfg.Influx == nil {
+		return nil
+	}
+
+	cfg := *d.Cfg.Influx
+	cfg.Log = d.Log.Child("influx", log.Data{})
+	cfg.Hostname = d.Hostname
+
+	client, err := influx.NewClient(cfg)
+	if err != nil {
+		return fmt.Errorf("cannot create influx client: %w", err)
+	}
+
+	d.Influx = client
+
+	return nil
+}
+
 func (d *Daemon) wait() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -170,6 +209,10 @@ func (d *Daemon) start() error {
 		}
 	}
 
+	if d.Influx != nil {
+		d.Influx.Start()
+	}
+
 	d.Log.Info("started")
 
 	return nil
@@ -177,6 +220,10 @@ func (d *Daemon) start() error {
 
 func (d *Daemon) stop() {
 	d.Log.Info("stopping")
+
+	if d.Influx != nil {
+		d.Influx.Stop()
+	}
 
 	for _, s := range d.httpServers {
 		s.Stop()
@@ -188,6 +235,10 @@ func (d *Daemon) stop() {
 }
 
 func (d *Daemon) terminate() {
+	if d.Influx != nil {
+		d.Influx.Terminate()
+	}
+
 	for _, c := range d.httpClients {
 		c.Terminate()
 	}

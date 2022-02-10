@@ -2,13 +2,11 @@ package main
 
 import (
 	"github.com/exograd/go-daemon/daemon"
+	"github.com/exograd/go-daemon/influx"
 	"github.com/exograd/go-log"
 )
 
 type ServiceCfg struct {
-	Logger        *log.LoggerCfg       `json:"logger"`
-	HTTPServerCfg daemon.HTTPServerCfg `json:"httpServer"`
-	HTTPClientCfg daemon.HTTPClientCfg `json:"httpClient"`
 }
 
 type Service struct {
@@ -34,14 +32,19 @@ func (s *Service) ServiceCfg() interface{} {
 
 func (s *Service) DaemonCfg() (daemon.DaemonCfg, error) {
 	cfg := daemon.DaemonCfg{
-		Logger: s.Cfg.Logger,
-
 		HTTPServers: make(map[string]daemon.HTTPServerCfg),
 		HTTPClients: make(map[string]daemon.HTTPClientCfg),
 	}
 
-	cfg.HTTPServers["main"] = s.Cfg.HTTPServerCfg
-	cfg.HTTPClients["default"] = s.Cfg.HTTPClientCfg
+	cfg.HTTPServers["main"] = daemon.HTTPServerCfg{
+		Address: "localhost:8080",
+	}
+
+	cfg.HTTPClients["default"] = daemon.HTTPClientCfg{}
+
+	cfg.Influx = &influx.ClientCfg{
+		Bucket: "go-daemon/main",
+	}
 
 	return cfg, nil
 }
