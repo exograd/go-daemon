@@ -6,8 +6,9 @@ import (
 )
 
 type ServiceCfg struct {
-	Logger  *log.LoggerCfg       `json:"logger"`
-	HTTPCfg daemon.HTTPServerCfg `json:"httpServer"`
+	Logger        *log.LoggerCfg       `json:"logger"`
+	HTTPServerCfg daemon.HTTPServerCfg `json:"httpServer"`
+	HTTPClientCfg daemon.HTTPClientCfg `json:"httpClient"`
 }
 
 type Service struct {
@@ -36,9 +37,11 @@ func (s *Service) DaemonCfg() (daemon.DaemonCfg, error) {
 		Logger: s.Cfg.Logger,
 
 		HTTPServers: make(map[string]daemon.HTTPServerCfg),
+		HTTPClients: make(map[string]daemon.HTTPClientCfg),
 	}
 
-	cfg.HTTPServers["main"] = s.Cfg.HTTPCfg
+	cfg.HTTPServers["main"] = s.Cfg.HTTPServerCfg
+	cfg.HTTPClients["default"] = s.Cfg.HTTPClientCfg
 
 	return cfg, nil
 }

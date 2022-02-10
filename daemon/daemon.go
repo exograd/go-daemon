@@ -32,6 +32,7 @@ type DaemonCfg struct {
 	Logger *log.LoggerCfg
 
 	HTTPServers map[string]HTTPServerCfg
+	HTTPClients map[string]HTTPClientCfg
 }
 
 type Daemon struct {
@@ -43,6 +44,7 @@ type Daemon struct {
 	service Service
 
 	httpServers map[string]*HTTPServer
+	httpClients map[string]*HTTPClient
 
 	stopChan  chan struct{}
 	errorChan chan error
@@ -69,6 +71,7 @@ func (d *Daemon) init() error {
 	initFuncs := []func() error{
 		d.initLogger,
 		d.initHTTPServers,
+		d.initHTTPClients,
 	}
 
 	for _, initFunc := range initFuncs {
@@ -115,6 +118,23 @@ func (d *Daemon) initHTTPServers() error {
 		}
 
 		d.httpServers[name] = server
+	}
+
+	return nil
+}
+
+func (d *Daemon) initHTTPClients() error {
+	d.httpClients = make(map[string]*HTTPClient)
+
+	for name, cfg := range d.Cfg.HTTPClients {
+		cfg.Log = d.Log.Child("http-client", log.Data{"client": name})
+
+		client, err := NewHTTPClient(cfg)
+		if err != nil {
+			return fmt.Errorf("cannot create http client %q: %w", name, err)
+		}
+
+		d.httpClients[name] = client
 	}
 
 	return nil
@@ -168,6 +188,10 @@ func (d *Daemon) stop() {
 }
 
 func (d *Daemon) terminate() {
+	for _, c := range d.httpClients {
+		c.Terminate()
+	}
+
 	for _, s := range d.httpServers {
 		s.Terminate()
 	}
