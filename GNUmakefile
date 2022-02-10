@@ -12,10 +12,12 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 # IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+BIN_DIR = $(CURDIR)/bin
+
 all: build
 
 build: FORCE
-	go build ./...
+	GOBIN=$(BIN_DIR) go install ./...
 
 test:
 	go test -race -count 1 ./...
