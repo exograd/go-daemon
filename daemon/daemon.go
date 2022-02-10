@@ -202,7 +202,10 @@ func Run(name, description string, service Service) {
 		}
 	}
 
-	daemonCfg := service.DaemonCfg()
+	daemonCfg, err := service.DaemonCfg()
+	if err != nil {
+		p.Fatal("invalid configuration: %v", err)
+	}
 
 	daemonCfg.name = name
 	daemonCfg.description = description
