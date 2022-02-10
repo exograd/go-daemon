@@ -21,6 +21,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/exograd/go-daemon/dhttp"
 	"github.com/exograd/go-daemon/influx"
 	"github.com/exograd/go-log"
 	"github.com/exograd/go-program"
@@ -32,8 +33,8 @@ type DaemonCfg struct {
 
 	Logger *log.LoggerCfg
 
-	HTTPServers map[string]HTTPServerCfg
-	HTTPClients map[string]HTTPClientCfg
+	HTTPServers map[string]dhttp.ServerCfg
+	HTTPClients map[string]dhttp.ClientCfg
 
 	Influx *influx.ClientCfg
 }
@@ -46,8 +47,8 @@ type Daemon struct {
 	program *program.Program
 	service Service
 
-	httpServers map[string]*HTTPServer
-	httpClients map[string]*HTTPClient
+	httpServers map[string]*dhttp.Server
+	httpClients map[string]*dhttp.Client
 
 	Influx *influx.Client
 
@@ -127,12 +128,12 @@ func (d *Daemon) initLogger() error {
 }
 
 func (d *Daemon) initHTTPServers() error {
-	d.httpServers = make(map[string]*HTTPServer)
+	d.httpServers = make(map[string]*dhttp.Server)
 
 	for name, cfg := range d.Cfg.HTTPServers {
 		cfg.Log = d.Log.Child("http-server", log.Data{"server": name})
 
-		server, err := NewHTTPServer(cfg)
+		server, err := dhttp.NewServer(cfg)
 		if err != nil {
 			return fmt.Errorf("cannot create http server %q: %w", name, err)
 		}
@@ -144,12 +145,12 @@ func (d *Daemon) initHTTPServers() error {
 }
 
 func (d *Daemon) initHTTPClients() error {
-	d.httpClients = make(map[string]*HTTPClient)
+	d.httpClients = make(map[string]*dhttp.Client)
 
 	for name, cfg := range d.Cfg.HTTPClients {
 		cfg.Log = d.Log.Child("http-client", log.Data{"client": name})
 
-		client, err := NewHTTPClient(cfg)
+		client, err := dhttp.NewClient(cfg)
 		if err != nil {
 			return fmt.Errorf("cannot create http client %q: %w", name, err)
 		}

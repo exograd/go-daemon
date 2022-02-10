@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package daemon
+package dhttp
 
 import (
 	"net"
@@ -22,18 +22,18 @@ import (
 	"github.com/exograd/go-log"
 )
 
-type HTTPClientCfg struct {
+type ClientCfg struct {
 	Log *log.Logger `json:"-"`
 }
 
-type HTTPClient struct {
-	Cfg HTTPClientCfg
+type Client struct {
+	Cfg ClientCfg
 	Log *log.Logger
 
 	client *http.Client
 }
 
-func NewHTTPClient(cfg HTTPClientCfg) (*HTTPClient, error) {
+func NewClient(cfg ClientCfg) (*Client, error) {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -48,10 +48,10 @@ func NewHTTPClient(cfg HTTPClientCfg) (*HTTPClient, error) {
 
 	client := &http.Client{
 		Timeout:   30 * time.Second,
-		Transport: NewHTTPRoundTripper(transport, cfg.Log),
+		Transport: NewRoundTripper(transport, cfg.Log),
 	}
 
-	c := &HTTPClient{
+	c := &Client{
 		Cfg: cfg,
 		Log: cfg.Log,
 
@@ -61,10 +61,10 @@ func NewHTTPClient(cfg HTTPClientCfg) (*HTTPClient, error) {
 	return c, nil
 }
 
-func (c *HTTPClient) Terminate() {
+func (c *Client) Terminate() {
 	c.client.CloseIdleConnections()
 }
 
-func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return c.client.Do(req)
 }

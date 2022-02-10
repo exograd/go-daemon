@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package daemon
+package dhttp
 
 import (
 	"fmt"
@@ -24,28 +24,28 @@ import (
 	"github.com/exograd/go-log"
 )
 
-type HTTPRoundTripper struct {
+type RoundTripper struct {
 	Log *log.Logger
 
 	http.RoundTripper
 }
 
-func NewHTTPRoundTripper(rt http.RoundTripper, logger *log.Logger) *HTTPRoundTripper {
-	return &HTTPRoundTripper{
+func NewRoundTripper(rt http.RoundTripper, logger *log.Logger) *RoundTripper {
+	return &RoundTripper{
 		Log: logger,
 
 		RoundTripper: rt,
 	}
 }
 
-func (rt *HTTPRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	start := time.Now()
 	res, err := rt.RoundTripper.RoundTrip(req)
 	rt.logRequest(req, res, time.Since(start).Seconds())
 	return res, err
 }
 
-func (rt *HTTPRoundTripper) logRequest(req *http.Request, res *http.Response, seconds float64) {
+func (rt *RoundTripper) logRequest(req *http.Request, res *http.Response, seconds float64) {
 	var statusString string
 	if res == nil {
 		statusString = "-"

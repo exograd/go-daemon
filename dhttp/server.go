@@ -12,7 +12,7 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-package daemon
+package dhttp
 
 import (
 	"context"
@@ -27,14 +27,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type HTTPServerCfg struct {
+type ServerCfg struct {
 	Log *log.Logger `json:"-"`
 
 	Address string `json:"address"`
 }
 
-type HTTPServer struct {
-	Cfg HTTPServerCfg
+type Server struct {
+	Cfg ServerCfg
 	Log *log.Logger
 
 	server *http.Server
@@ -45,7 +45,7 @@ type HTTPServer struct {
 	wg        sync.WaitGroup
 }
 
-func NewHTTPServer(cfg HTTPServerCfg) (*HTTPServer, error) {
+func NewServer(cfg ServerCfg) (*Server, error) {
 	if cfg.Log == nil {
 		cfg.Log = log.DefaultLogger("http-server")
 	}
@@ -54,7 +54,7 @@ func NewHTTPServer(cfg HTTPServerCfg) (*HTTPServer, error) {
 		cfg.Address = "localhost:8080"
 	}
 
-	s := &HTTPServer{
+	s := &Server{
 		Cfg: cfg,
 		Log: cfg.Log,
 
@@ -72,7 +72,7 @@ func NewHTTPServer(cfg HTTPServerCfg) (*HTTPServer, error) {
 	return s, nil
 }
 
-func (s *HTTPServer) Start() error {
+func (s *Server) Start() error {
 	listener, err := net.Listen("tcp", s.Cfg.Address)
 	if err != nil {
 		return fmt.Errorf("cannot listen on %q: %w", s.Cfg.Address, err)
@@ -94,16 +94,16 @@ func (s *HTTPServer) Start() error {
 	return nil
 }
 
-func (s *HTTPServer) Stop() {
+func (s *Server) Stop() {
 	close(s.stopChan)
 	s.wg.Done()
 }
 
-func (s *HTTPServer) Terminate() {
+func (s *Server) Terminate() {
 	close(s.errorChan)
 }
 
-func (s *HTTPServer) main() {
+func (s *Server) main() {
 	defer func() {
 		s.wg.Done()
 	}()
@@ -117,7 +117,7 @@ func (s *HTTPServer) main() {
 	}
 }
 
-func (s *HTTPServer) shutdown() {
+func (s *Server) shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -126,7 +126,7 @@ func (s *HTTPServer) shutdown() {
 	}
 }
 
-func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w2 := NewResponseWriter(w)
 
 	startTime := time.Now()
@@ -135,7 +135,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	s.router.ServeHTTP(w2, req)
 }
 
-func (s *HTTPServer) logRequest(req *http.Request, w *ResponseWriter, startTime time.Time) {
+func (s *Server) logRequest(req *http.Request, w *ResponseWriter, startTime time.Time) {
 	reqTime := time.Since(startTime)
 	seconds := reqTime.Seconds()
 
