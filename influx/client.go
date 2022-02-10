@@ -18,12 +18,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/exograd/go-daemon/dhttp"
 	"github.com/exograd/go-log"
 )
 
 type ClientCfg struct {
-	Log      *log.Logger `json:"-"`
-	Hostname string      `json:"-"`
+	Log        *log.Logger   `json:"-"`
+	HTTPClient *dhttp.Client `json:"-"`
+	Hostname   string        `json:"-"`
 
 	URI       string            `json:"uri"`
 	Bucket    string            `json:"bucket"`
@@ -33,9 +35,14 @@ type ClientCfg struct {
 	Tags      map[string]string `json:"tags"`
 }
 
+func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {
+	return dhttp.ClientCfg{}
+}
+
 type Client struct {
-	Cfg ClientCfg
-	Log *log.Logger
+	Cfg        ClientCfg
+	Log        *log.Logger
+	HTTPClient *dhttp.Client
 
 	tags map[string]string
 
@@ -47,6 +54,8 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 	if cfg.Log == nil {
 		cfg.Log = log.DefaultLogger("influx")
 	}
+
+	cfg.HTTPClient = cfg.HTTPClient
 
 	if cfg.URI == "" {
 		cfg.URI = "http://localhost:8086"

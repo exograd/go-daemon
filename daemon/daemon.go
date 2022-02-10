@@ -154,16 +154,36 @@ func (d *Daemon) initHTTPServers() error {
 func (d *Daemon) initHTTPClients() error {
 	d.httpClients = make(map[string]*dhttp.Client)
 
-	for name, cfg := range d.Cfg.HTTPClients {
-		cfg.Log = d.Log.Child("http-client", log.Data{"client": name})
+	if d.Cfg.Influx != nil {
+		cfg := influx.HTTPClientCfg(d.Cfg.Influx)
 
-		client, err := dhttp.NewClient(cfg)
-		if err != nil {
-			return fmt.Errorf("cannot create http client %q: %w", name, err)
+		if err := d.initHTTPClient("influx", cfg); err != nil {
+			return err
 		}
-
-		d.httpClients[name] = client
 	}
+
+	for name, cfg := range d.Cfg.HTTPClients {
+		if err := d.initHTTPClient(name, cfg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *Daemon) initHTTPClient(name string, cfg dhttp.ClientCfg) error {
+	cfg.Log = d.Log.Child("http-client", log.Data{"client": name})
+
+	client, err := dhttp.NewClient(cfg)
+	if err != nil {
+		return fmt.Errorf("cannot create http client %q: %w", name, err)
+	}
+
+	if _, found := d.httpClients[name]; found {
+		return fmt.Errorf("duplicate http client %q", name)
+	}
+
+	d.httpClients[name] = client
 
 	return nil
 }
@@ -174,7 +194,9 @@ func (d *Daemon) initInflux() error {
 	}
 
 	cfg := *d.Cfg.Influx
+
 	cfg.Log = d.Log.Child("influx", log.Data{})
+	cfg.HTTPClient = d.httpClients["influx"]
 	cfg.Hostname = d.Hostname
 
 	client, err := influx.NewClient(cfg)
