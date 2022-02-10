@@ -39,6 +39,13 @@ type DaemonCfg struct {
 	Influx *influx.ClientCfg
 }
 
+func NewDaemonCfg() DaemonCfg {
+	return DaemonCfg{
+		HTTPServers: make(map[string]dhttp.ServerCfg),
+		HTTPClients: make(map[string]dhttp.ClientCfg),
+	}
+}
+
 type Daemon struct {
 	Cfg DaemonCfg
 

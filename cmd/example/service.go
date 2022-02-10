@@ -32,10 +32,7 @@ func (s *Service) ServiceCfg() interface{} {
 }
 
 func (s *Service) DaemonCfg() (daemon.DaemonCfg, error) {
-	cfg := daemon.DaemonCfg{
-		HTTPServers: make(map[string]dhttp.ServerCfg),
-		HTTPClients: make(map[string]dhttp.ClientCfg),
-	}
+	cfg := daemon.NewDaemonCfg()
 
 	cfg.HTTPServers["main"] = dhttp.ServerCfg{
 		Address: "localhost:8080",
