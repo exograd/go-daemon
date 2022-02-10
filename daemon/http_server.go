@@ -50,6 +50,10 @@ func NewHTTPServer(cfg HTTPServerCfg) (*HTTPServer, error) {
 		cfg.Log = log.DefaultLogger("http-server")
 	}
 
+	if cfg.Address == "" {
+		cfg.Address = "localhost:8080"
+	}
+
 	s := &HTTPServer{
 		Cfg: cfg,
 		Log: cfg.Log,
