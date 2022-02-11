@@ -223,7 +223,7 @@ func (c *Client) sendPoints(points Points) error {
 	if !(res.StatusCode >= 200 && res.StatusCode < 300) {
 		bodyData, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			c.Log.Error("cannot read response body: %w", err)
+			c.Log.Error("cannot read response body: %v", err)
 		}
 
 		bodyString := ""
