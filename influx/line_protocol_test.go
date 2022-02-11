@@ -40,7 +40,7 @@ func TestEncodePoint(t *testing.T) {
 			`m3,x=foo a=-1i`},
 		{NewPoint("m4", Tags{"x": "1", "y": "23"}, Fields{"abc": "def"}),
 			`m4,x=1,y=23 abc="def"`},
-		{NewPointWithTimestamp("m5", Tags{}, Fields{"a": 1}, &timestamp),
+		{NewPointWithTimestamp("m5", Tags{}, Fields{"a": 1}, timestamp),
 			`m5 a=1i ` + strconv.FormatInt(timestamp.UnixNano(), 10)},
 		{NewPoint(" m, 6 ", Tags{", =": `""`}, Fields{"=": `"a"`}),
 			`\ m\,\ 6\ ,\,\ \=="" \=="\"a\""`},
@@ -76,7 +76,7 @@ func TestEncodePoints(t *testing.T) {
 		{Points{
 			NewPoint("m1", Tags{}, Fields{"a": 1}),
 			NewPoint("m2", Tags{"x": "foo"}, Fields{"a": 1, "b": false}),
-			NewPointWithTimestamp("m3", Tags{}, Fields{"a": "n"}, &timestamp),
+			NewPointWithTimestamp("m3", Tags{}, Fields{"a": "n"}, timestamp),
 		},
 			"m1 a=1i\nm2,x=foo a=1i,b=false\nm3 a=\"n\" " +
 				strconv.FormatInt(timestamp.UnixNano(), 10) + "\n"},

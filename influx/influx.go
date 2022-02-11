@@ -37,11 +37,11 @@ func NewPoint(measurement string, tags Tags, fields Fields) *Point {
 	}
 }
 
-func NewPointWithTimestamp(measurement string, tags Tags, fields Fields, t *time.Time) *Point {
+func NewPointWithTimestamp(measurement string, tags Tags, fields Fields, t time.Time) *Point {
 	return &Point{
 		Measurement: measurement,
 		Tags:        tags,
 		Fields:      fields,
-		Timestamp:   t,
+		Timestamp:   &t,
 	}
 }
