@@ -17,7 +17,7 @@ BIN_DIR = $(CURDIR)/bin
 all: build
 
 build: FORCE
-	GOBIN=$(BIN_DIR) go install ./...
+	GOBIN=$(BIN_DIR) go install $(CURDIR)/...
 
 check: vet
 
