@@ -15,7 +15,12 @@
 package influx
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"path"
 	"sync"
 	"time"
 
@@ -44,6 +49,7 @@ type Client struct {
 	Log        *log.Logger
 	HTTPClient *dhttp.Client
 
+	uri  *url.URL
 	tags map[string]string
 
 	pointsChan chan Points
@@ -58,10 +64,16 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 		cfg.Log = log.DefaultLogger("influx")
 	}
 
-	cfg.HTTPClient = cfg.HTTPClient
+	if cfg.HTTPClient == nil {
+		return nil, fmt.Errorf("missing http client")
+	}
 
 	if cfg.URI == "" {
 		cfg.URI = "http://localhost:8086"
+	}
+	uri, err := url.Parse(cfg.URI)
+	if err != nil {
+		return nil, fmt.Errorf("invalid uri: %w", err)
 	}
 
 	if cfg.Bucket == "" {
@@ -79,8 +91,12 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 	}
 
 	c := &Client{
-		Cfg: cfg,
-		Log: cfg.Log,
+		Cfg:        cfg,
+		Log:        cfg.Log,
+		HTTPClient: cfg.HTTPClient,
+
+		uri:  uri,
+		tags: tags,
 
 		pointsChan: make(chan Points),
 
@@ -132,16 +148,34 @@ func (c *Client) EnqueuePoint(p *Point) {
 	c.EnqueuePoints(Points{p})
 }
 
-func (c *Client) EnqueuePoints(ps Points) {
-	c.pointsChan <- ps
+func (c *Client) EnqueuePoints(points Points) {
+	c.pointsChan <- points
 }
 
-func (c *Client) enqueuePoints(ps Points) {
-	c.points = append(c.points, ps...)
+func (c *Client) enqueuePoints(points Points) {
+	for _, p := range points {
+		c.finalizePoint(p)
+	}
+
+	c.points = append(c.points, points...)
 
 	if len(c.points) >= c.Cfg.BatchSize {
 		c.flush()
 	}
+}
+
+func (c *Client) finalizePoint(point *Point) {
+	tags := Tags{}
+
+	for key, value := range c.tags {
+		tags[key] = value
+	}
+
+	for key, value := range point.Tags {
+		tags[key] = value
+	}
+
+	point.Tags = tags
 }
 
 func (c *Client) flush() {
@@ -149,7 +183,54 @@ func (c *Client) flush() {
 		return
 	}
 
-	// TODO
-	c.Log.Info("flushing %d points", len(c.points))
+	if err := c.sendPoints(c.points); err != nil {
+		c.Log.Error("cannot send points: %v", err)
+		return
+	}
+
 	c.points = nil
+}
+
+func (c *Client) sendPoints(points Points) error {
+	uri := *c.uri
+	uri.Path = path.Join(uri.Path, "/api/v2/write")
+
+	query := url.Values{}
+	query.Set("bucket", c.Cfg.Bucket)
+	if c.Cfg.Org != "" {
+		query.Set("org", c.Cfg.Org)
+	}
+
+	uri.RawQuery = query.Encode()
+
+	var buf bytes.Buffer
+	EncodePoints(points, &buf)
+
+	req, err := http.NewRequest("POST", uri.String(), &buf)
+	if err != nil {
+		return fmt.Errorf("cannot create request: %w", err)
+	}
+
+	res, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("cannot send request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if !(res.StatusCode >= 200 && res.StatusCode < 300) {
+		bodyData, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			c.Log.Error("cannot read response body: %w", err)
+		}
+
+		bodyString := ""
+		if bodyData != nil {
+			bodyString = " (" + string(bodyData) + ")"
+		}
+
+		return fmt.Errorf("request failed with status %d%s",
+			res.StatusCode, bodyString)
+	}
+
+	return nil
 }

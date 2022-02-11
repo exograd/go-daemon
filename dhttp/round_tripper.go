@@ -40,8 +40,13 @@ func NewRoundTripper(rt http.RoundTripper, logger *log.Logger) *RoundTripper {
 
 func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	start := time.Now()
+
 	res, err := rt.RoundTripper.RoundTrip(req)
-	rt.logRequest(req, res, time.Since(start).Seconds())
+
+	if err == nil {
+		rt.logRequest(req, res, time.Since(start).Seconds())
+	}
+
 	return res, err
 }
 
