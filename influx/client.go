@@ -31,7 +31,6 @@ type ClientCfg struct {
 	Bucket    string            `json:"bucket"`
 	Org       string            `json:"org"`
 	BatchSize int               `json:"batchSize"`
-	Precision Precision         `json:"precision"`
 	Tags      map[string]string `json:"tags"`
 }
 
