@@ -33,15 +33,18 @@ type ClientCfg struct {
 	HTTPClient *dhttp.Client `json:"-"`
 	Hostname   string        `json:"-"`
 
-	URI       string            `json:"uri"`
-	Bucket    string            `json:"bucket"`
-	Org       string            `json:"org"`
-	BatchSize int               `json:"batchSize"`
-	Tags      map[string]string `json:"tags"`
+	URI         string            `json:"uri"`
+	Bucket      string            `json:"bucket"`
+	Org         string            `json:"org"`
+	BatchSize   int               `json:"batchSize"`
+	Tags        map[string]string `json:"tags"`
+	LogRequests bool              `json:"logRequests"`
 }
 
 func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {
-	return dhttp.ClientCfg{}
+	return dhttp.ClientCfg{
+		LogRequests: cfg.LogRequests,
+	}
 }
 
 type Client struct {

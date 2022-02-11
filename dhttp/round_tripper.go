@@ -25,14 +25,16 @@ import (
 )
 
 type RoundTripper struct {
+	Cfg *ClientCfg
 	Log *log.Logger
 
 	http.RoundTripper
 }
 
-func NewRoundTripper(rt http.RoundTripper, logger *log.Logger) *RoundTripper {
+func NewRoundTripper(rt http.RoundTripper, cfg *ClientCfg) *RoundTripper {
 	return &RoundTripper{
-		Log: logger,
+		Cfg: cfg,
+		Log: cfg.Log,
 
 		RoundTripper: rt,
 	}
@@ -43,7 +45,7 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	res, err := rt.RoundTripper.RoundTrip(req)
 
-	if err == nil {
+	if err == nil && rt.Cfg.LogRequests {
 		rt.logRequest(req, res, time.Since(start).Seconds())
 	}
 

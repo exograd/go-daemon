@@ -41,7 +41,8 @@ func (s *Service) DaemonCfg() (daemon.DaemonCfg, error) {
 	cfg.HTTPClients["default"] = dhttp.ClientCfg{}
 
 	cfg.Influx = &influx.ClientCfg{
-		Bucket: "daemon/main",
+		Bucket:      "daemon/main",
+		LogRequests: true,
 	}
 
 	return cfg, nil

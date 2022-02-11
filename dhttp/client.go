@@ -24,6 +24,8 @@ import (
 
 type ClientCfg struct {
 	Log *log.Logger `json:"-"`
+
+	LogRequests bool `json:"logRequests"`
 }
 
 type Client struct {
@@ -48,7 +50,7 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 
 	client := &http.Client{
 		Timeout:   30 * time.Second,
-		Transport: NewRoundTripper(transport, cfg.Log),
+		Transport: NewRoundTripper(transport, &cfg),
 	}
 
 	c := &Client{
