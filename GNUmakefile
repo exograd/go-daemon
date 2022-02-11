@@ -21,15 +21,15 @@ build: FORCE
 
 check: vet staticcheck
 
-test:
-	go test -race -count 1 ./...
+vet:
+	go vet ./...
 
 staticcheck:
 	staticcheck ./...
 
-vet:
-	go vet ./...
+test:
+	go test -race -count 1 ./...
 
 FORCE:
 
-.PHONY: all build check test vet staticcheck
+.PHONY: all build check vet staticcheck test
