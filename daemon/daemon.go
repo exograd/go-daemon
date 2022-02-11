@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/exograd/go-daemon/dhttp"
@@ -63,7 +62,6 @@ type Daemon struct {
 
 	stopChan  chan struct{}
 	errorChan chan error
-	wg        sync.WaitGroup
 }
 
 func newDaemon(cfg DaemonCfg, p *program.Program, service Service) *Daemon {

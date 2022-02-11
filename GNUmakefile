@@ -19,12 +19,17 @@ all: build
 build: FORCE
 	GOBIN=$(BIN_DIR) go install ./...
 
+check: vet staticcheck
+
 test:
 	go test -race -count 1 ./...
+
+staticcheck:
+	staticcheck ./...
 
 vet:
 	go vet ./...
 
 FORCE:
 
-.PHONY: all build test vet
+.PHONY: all build check test vet staticcheck
