@@ -10,7 +10,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
-	github.com/exograd/go-log v0.0.0-20220205103655-1e033052c63a // indirect
+	github.com/exograd/go-log v0.0.0-20220214092926-a955d47adc3f // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.1.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect

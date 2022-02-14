@@ -15,6 +15,8 @@
 package dhttp
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -25,11 +27,21 @@ import (
 	"github.com/exograd/go-log"
 )
 
+type APIError struct {
+	Message string       `json:"error"`
+	Code    string       `json:"code,omitempty"`
+	Data    APIErrorData `json:"data,omitempty"`
+}
+
+type APIErrorData map[string]interface{}
+
 type Handler struct {
 	Server *Server
+	Log    *log.Logger
 
 	Pattern string
 	Method  string
+	RouteId string
 
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
@@ -46,6 +58,50 @@ func (h *Handler) Reply(status int, r io.Reader) {
 			return
 		}
 	}
+}
+
+func (h *Handler) ReplyEmpty(status int) {
+	h.Reply(status, nil)
+}
+
+func (h *Handler) ReplyJSON(status int, value interface{}) {
+	header := h.ResponseWriter.Header()
+	header.Set("Content-Type", "application/json")
+
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetIndent("", "  ")
+
+	if err := encoder.Encode(value); err != nil {
+		h.Log.Error("cannot encode json response: %v", err)
+		h.ResponseWriter.WriteHeader(500)
+		return
+	}
+
+	h.Reply(status, &buf)
+}
+
+func (h *Handler) ReplyInternalError(status int, format string, args ...interface{}) {
+	h.Log.Error("internal error: "+format, args...)
+
+	h.ReplyJSON(status, APIError{
+		Message: "internal error",
+	})
+}
+
+func (h *Handler) ReplyError(status int, code, format string, args ...interface{}) {
+	h.ReplyJSON(status, APIError{
+		Message: fmt.Sprintf(format, args...),
+		Code:    code,
+	})
+}
+
+func (h *Handler) ReplyErrorData(status int, code string, data APIErrorData, format string, args ...interface{}) {
+	h.ReplyJSON(status, APIError{
+		Message: fmt.Sprintf(format, args...),
+		Code:    code,
+		Data:    data,
+	})
 }
 
 func (h *Handler) logRequest() {
@@ -76,8 +132,6 @@ func (h *Handler) logRequest() {
 	}
 
 	data := log.Data{
-		"method":        req.Method,
-		"path":          req.URL.Path,
 		"time":          reqTime.Microseconds(),
 		"response_size": w.ResponseBodySize,
 	}
@@ -88,6 +142,6 @@ func (h *Handler) logRequest() {
 		data["status"] = w.Status
 	}
 
-	h.Server.Log.InfoData(data, "%s %s %s %s %s",
+	h.Log.InfoData(data, "%s %s %s %s %s",
 		req.Method, req.URL.Path, statusString, resSizeString, reqTimeString)
 }

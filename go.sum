@@ -2,6 +2,12 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/exograd/go-log v0.0.0-20220205103655-1e033052c63a h1:LPLFAjqTjR9FpqGLAf3Z/yuTrKXgmRzyeFRYniAPHNc=
 github.com/exograd/go-log v0.0.0-20220205103655-1e033052c63a/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
+github.com/exograd/go-log v0.0.0-20220214091430-05e37c2fc97f h1:oFQh5QSgM5Obsl57STw5biV3ltrvyHGE0HhT4EmndqU=
+github.com/exograd/go-log v0.0.0-20220214091430-05e37c2fc97f/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
+github.com/exograd/go-log v0.0.0-20220214092501-27d7514f4364 h1:DPfisrwyGqwGArlNBdiix6EiSrsNExjAjVsdG80Wmag=
+github.com/exograd/go-log v0.0.0-20220214092501-27d7514f4364/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
+github.com/exograd/go-log v0.0.0-20220214092926-a955d47adc3f h1:GA4Y3b1QPML2HRjwvWZeOY6z8DGfZSgq6AUem2oP/cI=
+github.com/exograd/go-log v0.0.0-20220214092926-a955d47adc3f/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
 github.com/exograd/go-program v0.0.0-20220116124618-691d97553601 h1:+sUEGQIw/dFhYD70RbevikJmSbbqVkGjtDZlbaviamk=
 github.com/exograd/go-program v0.0.0-20220116124618-691d97553601/go.mod h1:MwexiQIzG0ouke5scIXyEwtPrEuanUfTL2V92tfZfmA=
 github.com/go-chi/chi/v5 v5.0.7 h1:rDTPXLDHGATaeHvVlLcR4Qe0zftYethFucbjVQ1PxU8=

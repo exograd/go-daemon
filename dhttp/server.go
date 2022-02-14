@@ -136,6 +136,7 @@ func (s *Server) shutdown() {
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h := &Handler{
 		Server: s,
+		Log:    s.Log.Child("", nil),
 
 		StartTime: time.Now(),
 	}
@@ -155,8 +156,12 @@ func (s *Server) Route(pattern, method string, routeFunc RouteFunc) {
 	handlerFunc := func(w http.ResponseWriter, req *http.Request) {
 		h := req.Context().Value(contextKeyHandler).(*Handler)
 
+		routeId := pattern + " " + method
+		h.Log.Data["route_id"] = routeId
+
 		h.Pattern = pattern
 		h.Method = method
+		h.RouteId = routeId
 
 		routeFunc(h)
 	}
