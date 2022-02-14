@@ -8,6 +8,8 @@ github.com/exograd/go-log v0.0.0-20220214092501-27d7514f4364 h1:DPfisrwyGqwGArlN
 github.com/exograd/go-log v0.0.0-20220214092501-27d7514f4364/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
 github.com/exograd/go-log v0.0.0-20220214092926-a955d47adc3f h1:GA4Y3b1QPML2HRjwvWZeOY6z8DGfZSgq6AUem2oP/cI=
 github.com/exograd/go-log v0.0.0-20220214092926-a955d47adc3f/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
+github.com/exograd/go-log v0.0.0-20220214102319-353b1d2e5370 h1:2InFV0DYciumr3w+I/BVZVJ9YtfsIgBZ/XRo3x2Zo0w=
+github.com/exograd/go-log v0.0.0-20220214102319-353b1d2e5370/go.mod h1:VT6uAqfeDAGClqzEI9ZwBCpCajdZNVzUgB3oaswKjGA=
 github.com/exograd/go-program v0.0.0-20220116124618-691d97553601 h1:+sUEGQIw/dFhYD70RbevikJmSbbqVkGjtDZlbaviamk=
 github.com/exograd/go-program v0.0.0-20220116124618-691d97553601/go.mod h1:MwexiQIzG0ouke5scIXyEwtPrEuanUfTL2V92tfZfmA=
 github.com/go-chi/chi/v5 v5.0.7 h1:rDTPXLDHGATaeHvVlLcR4Qe0zftYethFucbjVQ1PxU8=
