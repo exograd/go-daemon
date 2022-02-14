@@ -17,16 +17,22 @@ package dhttp
 import (
 	"context"
 	"fmt"
-	"math"
 	"net"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/exograd/go-log"
 	"github.com/go-chi/chi/v5"
 )
+
+type contextKey struct{}
+
+var (
+	contextKeyHandler contextKey = struct{}{}
+)
+
+type RouteFunc func(*Handler)
 
 type ServerCfg struct {
 	Log *log.Logger `json:"-"`
@@ -128,51 +134,32 @@ func (s *Server) shutdown() {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w2 := NewResponseWriter(w)
+	h := &Handler{
+		Server: s,
 
-	startTime := time.Now()
-	defer s.logRequest(req, w2, startTime)
+		StartTime: time.Now(),
+	}
 
-	s.Router.ServeHTTP(w2, req)
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, contextKeyHandler, h)
+
+	h.Request = req.WithContext(ctx)
+	h.ResponseWriter = NewResponseWriter(w)
+
+	defer h.logRequest()
+
+	s.Router.ServeHTTP(h.ResponseWriter, h.Request)
 }
 
-func (s *Server) logRequest(req *http.Request, w *ResponseWriter, startTime time.Time) {
-	reqTime := time.Since(startTime)
-	seconds := reqTime.Seconds()
+func (s *Server) Route(pattern, method string, routeFunc RouteFunc) {
+	handlerFunc := func(w http.ResponseWriter, req *http.Request) {
+		h := req.Context().Value(contextKeyHandler).(*Handler)
 
-	var reqTimeString string
-	if seconds < 0.001 {
-		reqTimeString = fmt.Sprintf("%dμs", int(math.Ceil(seconds*1e6)))
-	} else if seconds < 1.0 {
-		reqTimeString = fmt.Sprintf("%dms", int(math.Ceil(seconds*1e3)))
-	} else {
-		reqTimeString = fmt.Sprintf("%.1fs", seconds)
+		h.Pattern = pattern
+		h.Method = method
+
+		routeFunc(h)
 	}
 
-	var resSizeString string
-	if w.ResponseBodySize < 1000 {
-		resSizeString = fmt.Sprintf("%dB", w.ResponseBodySize)
-	} else if w.ResponseBodySize < 1_000_000 {
-		resSizeString = fmt.Sprintf("%.1fKB", float64(w.ResponseBodySize)/1e3)
-	} else if w.ResponseBodySize < 1_000_000_000 {
-		resSizeString = fmt.Sprintf("%.1fMB", float64(w.ResponseBodySize)/1e6)
-	} else {
-		resSizeString = fmt.Sprintf("%.1fGB", float64(w.ResponseBodySize)/1e9)
-	}
-
-	data := log.Data{
-		"method":        req.Method,
-		"path":          req.URL.Path,
-		"time":          reqTime.Microseconds(),
-		"response_size": w.ResponseBodySize,
-	}
-
-	statusString := "-"
-	if w.Status != 0 {
-		statusString = strconv.Itoa(w.Status)
-		data["status"] = w.Status
-	}
-
-	s.Log.InfoData(data, "%s %s %s %s %s",
-		req.Method, req.URL.Path, statusString, resSizeString, reqTimeString)
+	s.Router.MethodFunc(method, pattern, handlerFunc)
 }
