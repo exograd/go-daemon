@@ -20,6 +20,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -162,11 +163,16 @@ func (s *Server) logRequest(req *http.Request, w *ResponseWriter, startTime time
 	data := log.Data{
 		"method":        req.Method,
 		"path":          req.URL.Path,
-		"status":        w.Status,
 		"time":          reqTime.Microseconds(),
 		"response_size": w.ResponseBodySize,
 	}
 
-	s.Log.InfoData(data, "%s %s %d %s %s",
-		req.Method, req.URL.Path, w.Status, resSizeString, reqTimeString)
+	statusString := "-"
+	if w.Status != 0 {
+		statusString = strconv.Itoa(w.Status)
+		data["status"] = w.Status
+	}
+
+	s.Log.InfoData(data, "%s %s %s %s %s",
+		req.Method, req.URL.Path, statusString, resSizeString, reqTimeString)
 }
