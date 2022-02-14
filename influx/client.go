@@ -36,9 +36,9 @@ type ClientCfg struct {
 	URI         string            `json:"uri"`
 	Bucket      string            `json:"bucket"`
 	Org         string            `json:"org"`
-	BatchSize   int               `json:"batchSize"`
+	BatchSize   int               `json:"batch_size"`
 	Tags        map[string]string `json:"tags"`
-	LogRequests bool              `json:"logRequests"`
+	LogRequests bool              `json:"log_requests"`
 }
 
 func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {

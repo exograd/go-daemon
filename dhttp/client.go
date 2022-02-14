@@ -25,7 +25,7 @@ import (
 type ClientCfg struct {
 	Log *log.Logger `json:"-"`
 
-	LogRequests bool `json:"logRequests"`
+	LogRequests bool `json:"log_requests"`
 }
 
 type Client struct {
