@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"runtime"
@@ -48,6 +49,31 @@ type Handler struct {
 	ResponseWriter http.ResponseWriter
 
 	StartTime time.Time
+}
+
+func (h *Handler) RequestData() ([]byte, error) {
+	data, err := ioutil.ReadAll(h.Request.Body)
+	if err != nil {
+		h.ReplyInternalError(500, "cannot read request body: %v", err)
+		return nil, fmt.Errorf("cannot read request body: %w", err)
+	}
+
+	return data, nil
+}
+
+func (h *Handler) RequestDataJSON(dest interface{}) error {
+	data, err := h.RequestData()
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(data, &dest); err != nil {
+		h.ReplyError(400, "invalid_request_body",
+			"invalid request body: %v", err)
+		return fmt.Errorf("invalid request body: %w", err)
+	}
+
+	return nil
 }
 
 func (h *Handler) Reply(status int, r io.Reader) {
