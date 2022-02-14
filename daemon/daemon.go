@@ -53,8 +53,8 @@ type Daemon struct {
 	program *program.Program
 	service Service
 
-	httpServers map[string]*dhttp.Server
-	httpClients map[string]*dhttp.Client
+	HTTPServers map[string]*dhttp.Server
+	HTTPClients map[string]*dhttp.Client
 
 	Influx *influx.Client
 
@@ -133,7 +133,7 @@ func (d *Daemon) initLogger() error {
 }
 
 func (d *Daemon) initHTTPServers() error {
-	d.httpServers = make(map[string]*dhttp.Server)
+	d.HTTPServers = make(map[string]*dhttp.Server)
 
 	for name, cfg := range d.Cfg.HTTPServers {
 		cfg.Log = d.Log.Child("http-server", log.Data{"server": name})
@@ -143,14 +143,14 @@ func (d *Daemon) initHTTPServers() error {
 			return fmt.Errorf("cannot create http server %q: %w", name, err)
 		}
 
-		d.httpServers[name] = server
+		d.HTTPServers[name] = server
 	}
 
 	return nil
 }
 
 func (d *Daemon) initHTTPClients() error {
-	d.httpClients = make(map[string]*dhttp.Client)
+	d.HTTPClients = make(map[string]*dhttp.Client)
 
 	if d.Cfg.Influx != nil {
 		cfg := influx.HTTPClientCfg(d.Cfg.Influx)
@@ -177,11 +177,11 @@ func (d *Daemon) initHTTPClient(name string, cfg dhttp.ClientCfg) error {
 		return fmt.Errorf("cannot create http client %q: %w", name, err)
 	}
 
-	if _, found := d.httpClients[name]; found {
+	if _, found := d.HTTPClients[name]; found {
 		return fmt.Errorf("duplicate http client %q", name)
 	}
 
-	d.httpClients[name] = client
+	d.HTTPClients[name] = client
 
 	return nil
 }
@@ -194,7 +194,7 @@ func (d *Daemon) initInflux() error {
 	cfg := *d.Cfg.Influx
 
 	cfg.Log = d.Log.Child("influx", log.Data{})
-	cfg.HTTPClient = d.httpClients["influx"]
+	cfg.HTTPClient = d.HTTPClients["influx"]
 	cfg.Hostname = d.Hostname
 
 	client, err := influx.NewClient(cfg)
@@ -231,7 +231,7 @@ func (d *Daemon) start() error {
 		return err
 	}
 
-	for name, s := range d.httpServers {
+	for name, s := range d.HTTPServers {
 		if err := s.Start(); err != nil {
 			return fmt.Errorf("cannot start http server %q: %w", name, err)
 		}
@@ -253,7 +253,7 @@ func (d *Daemon) stop() {
 		d.Influx.Stop()
 	}
 
-	for _, s := range d.httpServers {
+	for _, s := range d.HTTPServers {
 		s.Stop()
 	}
 
@@ -267,11 +267,11 @@ func (d *Daemon) terminate() {
 		d.Influx.Terminate()
 	}
 
-	for _, c := range d.httpClients {
+	for _, c := range d.HTTPClients {
 		c.Terminate()
 	}
 
-	for _, s := range d.httpServers {
+	for _, s := range d.HTTPServers {
 		s.Terminate()
 	}
 

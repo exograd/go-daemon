@@ -38,7 +38,7 @@ type Server struct {
 	Log *log.Logger
 
 	server *http.Server
-	router *chi.Mux
+	Router *chi.Mux
 
 	stopChan  chan struct{}
 	errorChan chan error
@@ -58,7 +58,7 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 		Cfg: cfg,
 		Log: cfg.Log,
 
-		router: chi.NewMux(),
+		Router: chi.NewMux(),
 
 		stopChan:  make(chan struct{}),
 		errorChan: make(chan error),
@@ -132,7 +132,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
 	defer s.logRequest(req, w2, startTime)
 
-	s.router.ServeHTTP(w2, req)
+	s.Router.ServeHTTP(w2, req)
 }
 
 func (s *Server) logRequest(req *http.Request, w *ResponseWriter, startTime time.Time) {
