@@ -149,6 +149,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	defer h.logRequest()
 
+	defer func() {
+		if value := recover(); value != nil {
+			h.handlePanic(value)
+		}
+	}()
+
 	s.Router.ServeHTTP(h.ResponseWriter, h.Request)
 }
 

@@ -21,6 +21,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -102,6 +103,25 @@ func (h *Handler) ReplyErrorData(status int, code string, data APIErrorData, for
 		Code:    code,
 		Data:    data,
 	})
+}
+
+func (h *Handler) handlePanic(value interface{}) {
+	var msg string
+
+	switch v := value.(type) {
+	case error:
+		msg = v.Error()
+	case string:
+		msg = v
+	default:
+		msg = fmt.Sprintf("%#v", v)
+	}
+
+	buf := make([]byte, 4096)
+	n := runtime.Stack(buf, false)
+	buf = buf[0 : n-1]
+
+	h.Log.Error("panic: %s\n%s", msg, string(buf))
 }
 
 func (h *Handler) logRequest() {
