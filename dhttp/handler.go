@@ -115,10 +115,7 @@ func (h *Handler) ReplyJSON(status int, value interface{}) {
 
 func (h *Handler) ReplyInternalError(status int, format string, args ...interface{}) {
 	h.Log.Error("internal error: "+format, args...)
-
-	h.ReplyJSON(status, APIError{
-		Message: "internal error",
-	})
+	h.ReplyError(status, "internal_error", "internal error")
 }
 
 func (h *Handler) ReplyError(status int, code, format string, args ...interface{}) {
