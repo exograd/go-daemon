@@ -142,7 +142,7 @@ func (c *Client) SendJSONRequest(method string, uri *url.URL, header map[string]
 		var buf bytes.Buffer
 
 		encoder := json.NewEncoder(&buf)
-		if err := encoder.Encode(body); err != nil {
+		if err := encoder.Encode(value); err != nil {
 			return nil, fmt.Errorf("cannot encode request body: %w", err)
 		}
 
