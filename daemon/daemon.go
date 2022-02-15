@@ -227,10 +227,6 @@ func (d *Daemon) wait() {
 func (d *Daemon) start() error {
 	d.Log.Info("starting")
 
-	if err := d.service.Start(d); err != nil {
-		return err
-	}
-
 	for name, s := range d.HTTPServers {
 		if err := s.Start(); err != nil {
 			return fmt.Errorf("cannot start http server %q: %w", name, err)
@@ -241,6 +237,10 @@ func (d *Daemon) start() error {
 		d.Influx.Start()
 	}
 
+	if err := d.service.Start(d); err != nil {
+		return err
+	}
+
 	d.Log.Info("started")
 
 	return nil
@@ -248,6 +248,8 @@ func (d *Daemon) start() error {
 
 func (d *Daemon) stop() {
 	d.Log.Info("stopping")
+
+	d.service.Stop(d)
 
 	if d.Influx != nil {
 		d.Influx.Stop()
@@ -257,12 +259,12 @@ func (d *Daemon) stop() {
 		s.Stop()
 	}
 
-	d.service.Stop(d)
-
 	d.Log.Info("stopped")
 }
 
 func (d *Daemon) terminate() {
+	d.service.Terminate(d)
+
 	if d.Influx != nil {
 		d.Influx.Terminate()
 	}
@@ -274,8 +276,6 @@ func (d *Daemon) terminate() {
 	for _, s := range d.HTTPServers {
 		s.Terminate()
 	}
-
-	d.service.Terminate(d)
 
 	close(d.stopChan)
 	close(d.errorChan)
