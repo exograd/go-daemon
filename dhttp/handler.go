@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/exograd/go-log"
+	"github.com/go-chi/chi/v5"
 )
 
 type APIError struct {
@@ -49,6 +50,10 @@ type Handler struct {
 	ResponseWriter http.ResponseWriter
 
 	StartTime time.Time
+}
+
+func (h *Handler) RouteVariable(name string) string {
+	return chi.URLParam(h.Request, name)
 }
 
 func (h *Handler) RequestData() ([]byte, error) {

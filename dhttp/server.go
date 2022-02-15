@@ -161,6 +161,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (s *Server) Route(pattern, method string, routeFunc RouteFunc) {
 	handlerFunc := func(w http.ResponseWriter, req *http.Request) {
 		h := req.Context().Value(contextKeyHandler).(*Handler)
+		h.Request = req // the request object was modified by chi
 
 		routeId := pattern + " " + method
 		h.Log.Data["route_id"] = routeId
