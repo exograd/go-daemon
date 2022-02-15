@@ -118,7 +118,7 @@ func (c *Client) SendRequest(method string, uri *url.URL, header map[string]stri
 					reqErr.APIError = &apiErr
 					reqErr.Message += ": " + apiErr.Message
 				} else {
-					c.Log.Error("cannot decode api error response: %w", err)
+					c.Log.Error("cannot decode api error response: %v", err)
 				}
 			}
 
@@ -126,7 +126,7 @@ func (c *Client) SendRequest(method string, uri *url.URL, header map[string]stri
 				reqErr.Message += ": " + string(resBody)
 			}
 		} else {
-			c.Log.Error("cannot read response body: %w", err)
+			c.Log.Error("cannot read response body: %v", err)
 		}
 
 		return res, reqErr
