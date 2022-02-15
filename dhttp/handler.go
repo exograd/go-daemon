@@ -66,7 +66,7 @@ func (h *Handler) RequestData() ([]byte, error) {
 	return data, nil
 }
 
-func (h *Handler) RequestDataJSON(dest interface{}) error {
+func (h *Handler) JSONRequestData(dest interface{}) error {
 	data, err := h.RequestData()
 	if err != nil {
 		return err
