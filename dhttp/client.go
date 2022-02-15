@@ -90,7 +90,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 func (c *Client) SendRequest(method string, uri *url.URL, header map[string]string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(method, uri.String(), body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create request: %w")
+		return nil, fmt.Errorf("cannot create request: %w", err)
 	}
 
 	for name, value := range header {
