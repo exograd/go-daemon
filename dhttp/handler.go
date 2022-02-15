@@ -72,7 +72,7 @@ func (h *Handler) JSONRequestData(dest interface{}) error {
 		return err
 	}
 
-	if err := json.Unmarshal(data, &dest); err != nil {
+	if err := json.Unmarshal(data, dest); err != nil {
 		h.ReplyError(400, "invalid_request_body",
 			"invalid request body: %v", err)
 		return fmt.Errorf("invalid request body: %w", err)
