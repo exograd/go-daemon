@@ -48,7 +48,7 @@ type Client struct {
 	Cfg ClientCfg
 	Log *log.Logger
 
-	client *http.Client
+	Client *http.Client
 }
 
 func NewClient(cfg ClientCfg) (*Client, error) {
@@ -73,18 +73,18 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 		Cfg: cfg,
 		Log: cfg.Log,
 
-		client: client,
+		Client: client,
 	}
 
 	return c, nil
 }
 
 func (c *Client) Terminate() {
-	c.client.CloseIdleConnections()
+	c.Client.CloseIdleConnections()
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	return c.client.Do(req)
+	return c.Client.Do(req)
 }
 
 func (c *Client) SendRequest(method string, uri *url.URL, header map[string]string, body io.Reader) (*http.Response, error) {
