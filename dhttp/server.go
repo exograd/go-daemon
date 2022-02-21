@@ -152,6 +152,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if value := recover(); value != nil {
 			h.handlePanic(value)
+			h.ReplyInternalError(500, "internal error")
 		}
 	}()
 
