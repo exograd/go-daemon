@@ -27,8 +27,7 @@ import (
 )
 
 type DaemonCfg struct {
-	name        string
-	description string
+	name string
 
 	Logger *log.LoggerCfg
 
@@ -50,7 +49,6 @@ type Daemon struct {
 
 	Log *log.Logger
 
-	program *program.Program
 	service Service
 
 	HTTPServers map[string]*dhttp.Server
@@ -64,11 +62,10 @@ type Daemon struct {
 	errorChan chan error
 }
 
-func newDaemon(cfg DaemonCfg, p *program.Program, service Service) *Daemon {
+func newDaemon(cfg DaemonCfg, service Service) *Daemon {
 	d := &Daemon{
 		Cfg: cfg,
 
-		program: p,
 		service: service,
 
 		stopChan:  make(chan struct{}, 1),
@@ -220,7 +217,7 @@ func (d *Daemon) wait() {
 
 	case err := <-d.errorChan:
 		d.Log.Error("daemon error: %v", err)
-		d.program.Fatal("daemon error: %v", err)
+		os.Exit(1)
 	}
 }
 
@@ -311,10 +308,9 @@ func Run(name, description string, service Service) {
 	}
 
 	daemonCfg.name = name
-	daemonCfg.description = description
 
 	// Daemon
-	d := newDaemon(daemonCfg, p, service)
+	d := newDaemon(daemonCfg, service)
 
 	if err := d.init(); err != nil {
 		p.Fatal("cannot initialize daemon: %v", err)
@@ -323,6 +319,47 @@ func Run(name, description string, service Service) {
 	if err := d.start(); err != nil {
 		p.Fatal("cannot start daemon: %v", err)
 	}
+
+	d.wait()
+	d.stop()
+
+	d.terminate()
+}
+
+func RunTest(name string, service Service, cfgPath string, readyChan chan<- struct{}) {
+	abort := func(format string, args ...interface{}) {
+		fmt.Fprintf(os.Stderr, format+"\n", args...)
+		os.Exit(1)
+	}
+
+	// Configuration
+	serviceCfg := service.ServiceCfg()
+
+	if cfgPath != "" {
+		if err := LoadCfg(cfgPath, serviceCfg); err != nil {
+			abort("cannot load configuration: %v", err)
+		}
+	}
+
+	daemonCfg, err := service.DaemonCfg()
+	if err != nil {
+		abort("invalid configuration: %v", err)
+	}
+
+	daemonCfg.name = name
+
+	// Daemon
+	d := newDaemon(daemonCfg, service)
+
+	if err := d.init(); err != nil {
+		abort("cannot initialize daemon: %v", err)
+	}
+
+	if err := d.start(); err != nil {
+		abort("cannot start daemon: %v", err)
+	}
+
+	close(readyChan)
 
 	d.wait()
 	d.stop()
