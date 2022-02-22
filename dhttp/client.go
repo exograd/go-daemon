@@ -15,6 +15,7 @@
 package dhttp
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
@@ -29,6 +30,12 @@ type ClientCfg struct {
 	Log *log.Logger `json:"-"`
 
 	LogRequests bool `json:"log_requests"`
+
+	TLS *TLSClientCfg
+}
+
+type TLSClientCfg struct {
+	CACertificates []string `json:"ca_certificates"`
 }
 
 type Client struct {
@@ -49,6 +56,17 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 		IdleConnTimeout:       60 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	if cfg.TLS != nil {
+		caCertificatePool, err := LoadCertificates(cfg.TLS.CACertificates)
+		if err != nil {
+			return nil, err
+		}
+
+		transport.TLSClientConfig = &tls.Config{
+			RootCAs: caCertificatePool,
+		}
 	}
 
 	client := &http.Client{
