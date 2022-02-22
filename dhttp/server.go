@@ -16,6 +16,7 @@ package dhttp
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -38,6 +39,13 @@ type ServerCfg struct {
 	Log *log.Logger `json:"-"`
 
 	Address string `json:"address"`
+
+	TLS *TLSServerCfg `json:"tls,omitempty"`
+}
+
+type TLSServerCfg struct {
+	Certificate string `json:"certificate"`
+	PrivateKey  string `json:"private_key"`
 }
 
 type Server struct {
@@ -76,6 +84,13 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 		Handler: s,
 	}
 
+	if cfg.TLS != nil {
+		s.server.TLSConfig = &tls.Config{
+			MinVersion:               tls.VersionTLS13,
+			PreferServerCipherSuites: true,
+		}
+	}
+
 	return s, nil
 }
 
@@ -88,7 +103,18 @@ func (s *Server) Start() error {
 	s.Log.Info("listening on %s", s.Cfg.Address)
 
 	go func() {
-		if err := s.server.Serve(listener); err != nil {
+		var err error
+
+		if s.Cfg.TLS == nil {
+			err = s.server.Serve(listener)
+		} else {
+			certificate := s.Cfg.TLS.Certificate
+			privateKey := s.Cfg.TLS.PrivateKey
+
+			err = s.server.ServeTLS(listener, certificate, privateKey)
+		}
+
+		if err != nil {
 			if err != http.ErrServerClosed {
 				s.errorChan <- err
 			}
