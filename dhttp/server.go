@@ -80,8 +80,9 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 	}
 
 	s.server = &http.Server{
-		Addr:    cfg.Address,
-		Handler: s,
+		Addr:     cfg.Address,
+		Handler:  s,
+		ErrorLog: s.Log.StdLogger(log.LevelError),
 	}
 
 	if cfg.TLS != nil {
