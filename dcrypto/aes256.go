@@ -86,7 +86,7 @@ func DecryptAES256(inputData []byte, key AES256Key) ([]byte, error) {
 	decrypter := cipher.NewCBCDecrypter(blockCipher, iv)
 	decrypter.CryptBlocks(paddedData, paddedData)
 
-	outputData, err := UnpadPKCS5(paddedData)
+	outputData, err := UnpadPKCS5(paddedData, aes.BlockSize)
 	if err != nil {
 		return nil, fmt.Errorf("invalid padded data: %w", err)
 	}
