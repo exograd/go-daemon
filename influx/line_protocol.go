@@ -126,7 +126,6 @@ func encodeFieldValue(value interface{}, buf *bytes.Buffer) {
 		fmt.Fprintf(buf, "%v", v)
 	case string:
 		buf.WriteByte('"')
-		fmt.Printf("XXX %s → %s\n", v, stringFieldReplacer.Replace(v))
 		stringFieldReplacer.WriteString(buf, v)
 		buf.WriteByte('"')
 	case []byte:
