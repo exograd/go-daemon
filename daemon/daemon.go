@@ -100,6 +100,7 @@ func (d *Daemon) init() error {
 		d.initHTTPServers,
 		d.initHTTPClients,
 		d.initInflux,
+		d.initAPI,
 	}
 
 	for _, initFunc := range initFuncs {
@@ -146,6 +147,10 @@ func (d *Daemon) initLogger() error {
 }
 
 func (d *Daemon) initHTTPServers() error {
+	d.Cfg.AddHTTPServer("daemon-api", dhttp.ServerCfg{
+		Address: DefaultAPIAddress,
+	})
+
 	d.HTTPServers = make(map[string]*dhttp.Server)
 
 	for name, cfg := range d.Cfg.HTTPServers {
