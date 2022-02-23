@@ -15,7 +15,11 @@
 package dhttp
 
 import (
+	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
@@ -31,11 +35,12 @@ type ClientCfg struct {
 
 	LogRequests bool `json:"log_requests"`
 
-	TLS *TLSClientCfg
+	TLS *TLSClientCfg `json:"tls"`
 }
 
 type TLSClientCfg struct {
-	CACertificates []string `json:"ca_certificates"`
+	CACertificates []string            `json:"ca_certificates"`
+	PublicKeyPins  map[string][]string `json:"public_key_pins"`
 }
 
 type Client struct {
@@ -43,20 +48,26 @@ type Client struct {
 	Log *log.Logger
 
 	Client *http.Client
+
+	tlsCfg *tls.Config
 }
 
 func NewClient(cfg ClientCfg) (*Client, error) {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
+
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).DialContext,
-		MaxIdleConns:          100,
+
+		MaxIdleConns: 100,
+
 		IdleConnTimeout:       60 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+
+	tlsCfg := &tls.Config{}
 
 	if cfg.TLS != nil {
 		caCertificatePool, err := LoadCertificates(cfg.TLS.CACertificates)
@@ -64,9 +75,7 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 			return nil, err
 		}
 
-		transport.TLSClientConfig = &tls.Config{
-			RootCAs: caCertificatePool,
-		}
+		tlsCfg.RootCAs = caCertificatePool
 	}
 
 	client := &http.Client{
@@ -79,7 +88,11 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 		Log: cfg.Log,
 
 		Client: client,
+
+		tlsCfg: tlsCfg,
 	}
+
+	transport.DialTLSContext = c.DialTLSContext
 
 	return c, nil
 }
@@ -103,4 +116,66 @@ func (c *Client) SendRequest(method string, uri *url.URL, header map[string]stri
 	}
 
 	return c.Do(req)
+}
+
+func (c *Client) DialTLSContext(ctx context.Context, network, address string) (net.Conn, error) {
+	dialer := &tls.Dialer{
+		NetDialer: &net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		},
+		Config: c.tlsCfg,
+	}
+
+	conn, err := dialer.DialContext(ctx, network, address)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.checkTLSPublicKey(conn.(*tls.Conn)); err != nil {
+		conn.Close()
+		return nil, err
+	}
+
+	return conn, nil
+}
+
+func (c *Client) checkTLSPublicKey(conn *tls.Conn) error {
+	if c.Cfg.TLS == nil {
+		return nil
+	}
+
+	state := conn.ConnectionState()
+
+	pins, found := c.Cfg.TLS.PublicKeyPins[state.ServerName]
+	if !found || len(pins) == 0 {
+		return nil
+	}
+
+	if len(state.PeerCertificates) == 0 {
+		return fmt.Errorf("no peer certificate available")
+	}
+
+	cert := state.PeerCertificates[0]
+	pubKeyData, err := x509.MarshalPKIXPublicKey(cert.PublicKey)
+	if err != nil {
+		return fmt.Errorf("cannot marshal public key: %w", err)
+	}
+
+	hash := sha256.Sum256(pubKeyData)
+	hexHash := hex.EncodeToString(hash[:])
+
+	found = false
+	for _, pin := range pins {
+		if hexHash == pin {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("invalid server certificate: unknown public key")
+	}
+
+	return nil
 }
