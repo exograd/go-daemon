@@ -34,11 +34,11 @@ func (s *Service) ServiceCfg() interface{} {
 func (s *Service) DaemonCfg() (daemon.DaemonCfg, error) {
 	cfg := daemon.NewDaemonCfg()
 
-	cfg.HTTPServers["main"] = dhttp.ServerCfg{
+	cfg.AddHTTPServer("main", dhttp.ServerCfg{
 		Address: "localhost:8080",
-	}
+	})
 
-	cfg.HTTPClients["default"] = dhttp.ClientCfg{}
+	cfg.AddHTTPClient("default", dhttp.ClientCfg{})
 
 	cfg.Influx = &influx.ClientCfg{
 		Bucket:      "daemon/main",

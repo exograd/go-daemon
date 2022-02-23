@@ -44,6 +44,22 @@ func NewDaemonCfg() DaemonCfg {
 	}
 }
 
+func (cfg DaemonCfg) AddHTTPServer(name string, serverCfg dhttp.ServerCfg) {
+	if _, found := cfg.HTTPServers[name]; found {
+		panic(fmt.Sprintf("duplicate http server %q", name))
+	}
+
+	cfg.HTTPServers[name] = serverCfg
+}
+
+func (cfg DaemonCfg) AddHTTPClient(name string, clientCfg dhttp.ClientCfg) {
+	if _, found := cfg.HTTPClients[name]; found {
+		panic(fmt.Sprintf("duplicate http client %q", name))
+	}
+
+	cfg.HTTPClients[name] = clientCfg
+}
+
 type Daemon struct {
 	Cfg DaemonCfg
 
