@@ -152,7 +152,15 @@ func (c *Client) EnqueuePoint(p *Point) {
 }
 
 func (c *Client) EnqueuePoints(points Points) {
-	c.pointsChan <- points
+	// We do not want to be stuck writing on c.pointsChan if the server is
+	// stopping, so we check the stop chan.
+
+	select {
+	case <-c.stopChan:
+		return
+
+	case c.pointsChan <- points:
+	}
 }
 
 func (c *Client) enqueuePoints(points Points) {
