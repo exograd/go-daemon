@@ -62,7 +62,7 @@ func (rt *RoundTripper) logRequest(req *http.Request, res *http.Response, second
 
 	var reqTimeString string
 	if seconds < 0.001 {
-		reqTimeString = fmt.Sprintf("%dμs", int(math.Ceil(seconds*1e6)))
+		reqTimeString = fmt.Sprintf("%dµs", int(math.Ceil(seconds*1e6)))
 	} else if seconds < 1.0 {
 		reqTimeString = fmt.Sprintf("%dms", int(math.Ceil(seconds*1e3)))
 	} else {
