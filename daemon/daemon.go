@@ -22,6 +22,7 @@ import (
 
 	"github.com/exograd/go-daemon/dhttp"
 	"github.com/exograd/go-daemon/influx"
+	"github.com/exograd/go-daemon/pg"
 	"github.com/exograd/go-log"
 	"github.com/exograd/go-program"
 )
@@ -35,6 +36,8 @@ type DaemonCfg struct {
 	HTTPClients map[string]dhttp.ClientCfg
 
 	Influx *influx.ClientCfg
+
+	Pg *pg.ClientCfg
 }
 
 func NewDaemonCfg() DaemonCfg {
@@ -72,6 +75,8 @@ type Daemon struct {
 
 	Influx *influx.Client
 
+	Pg *pg.Client
+
 	Hostname string
 
 	stopChan  chan struct{}
@@ -100,6 +105,7 @@ func (d *Daemon) init() error {
 		d.initHTTPServers,
 		d.initHTTPClients,
 		d.initInflux,
+		d.initPg,
 		d.initAPI,
 	}
 
@@ -225,6 +231,25 @@ func (d *Daemon) initInflux() error {
 	return nil
 }
 
+func (d *Daemon) initPg() error {
+	if d.Cfg.Pg == nil {
+		return nil
+	}
+
+	cfg := *d.Cfg.Pg
+
+	cfg.Log = d.Log.Child("pg", log.Data{})
+
+	client, err := pg.NewClient(cfg)
+	if err != nil {
+		return fmt.Errorf("cannot create pg client: %w", err)
+	}
+
+	d.Pg = client
+
+	return nil
+}
+
 func (d *Daemon) wait() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -268,6 +293,10 @@ func (d *Daemon) stop() {
 	d.Log.Info("stopping")
 
 	d.service.Stop(d)
+
+	if d.Pg != nil {
+		d.Pg.Close()
+	}
 
 	if d.Influx != nil {
 		d.Influx.Stop()
