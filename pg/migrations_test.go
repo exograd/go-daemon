@@ -16,16 +16,17 @@ package pg
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseMigrationVersion(t *testing.T) {
+func TestCheckMigrationVersion(t *testing.T) {
 	assert := assert.New(t)
 
-	v, err := ParseMigrationVersion("20220430T002403Z")
+	assert.NoError(ValidateMigrationVersion("20220430T002403Z"))
 
-	assert.NoError(err)
-	assert.Equal("2022-04-30T00:24:03Z", v.Format(time.RFC3339))
+	assert.Error(ValidateMigrationVersion(""))
+	assert.Error(ValidateMigrationVersion("foo"))
+	assert.Error(ValidateMigrationVersion("20220430T002403"))
+	assert.Error(ValidateMigrationVersion("20220430002403Z"))
 }
