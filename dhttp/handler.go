@@ -118,6 +118,10 @@ func (h *Handler) ReplyInternalError(status int, format string, args ...interfac
 	h.ReplyError(status, "internal_error", "internal error")
 }
 
+func (h *Handler) ReplyNotImplemented(feature string) {
+	h.ReplyError(501, "not_implemented", "%s not implemented", feature)
+}
+
 func (h *Handler) ReplyError(status int, code, format string, args ...interface{}) {
 	h.ReplyJSON(status, APIError{
 		Message: fmt.Sprintf(format, args...),
