@@ -17,6 +17,7 @@ package pg
 import (
 	"context"
 	"fmt"
+	"path"
 
 	"github.com/exograd/go-log"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -30,16 +31,13 @@ const (
 	AdvisoryLockId2Migrations uint32 = 0x0001
 )
 
-type Schema struct {
-	Name    string
-	DirPath string
-}
-
 type ClientCfg struct {
 	Log *log.Logger `json:"-"`
 
-	URI     string   `json:"uri"`
-	Schemas []Schema `json:"schema"`
+	URI string `json:"uri"`
+
+	SchemaDirectory string   `json:"schema_directory"`
+	SchemaNames     []string `json:"schema_names"`
 }
 
 type Client struct {
@@ -79,17 +77,21 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 		Pool: pool,
 	}
 
-	if err := c.updateSchemas(); err != nil {
-		c.Close()
-		return nil, err
+	if c.Cfg.SchemaDirectory != "" {
+		if err := c.updateSchemas(); err != nil {
+			c.Close()
+			return nil, err
+		}
 	}
 
 	return c, nil
 }
 
 func (c *Client) updateSchemas() error {
-	for _, schema := range c.Cfg.Schemas {
-		if err := c.UpdateSchema(schema.Name, schema.DirPath); err != nil {
+	for _, name := range c.Cfg.SchemaNames {
+		dirPath := path.Join(c.Cfg.SchemaDirectory, name)
+
+		if err := c.UpdateSchema(name, dirPath); err != nil {
 			return err
 		}
 	}
