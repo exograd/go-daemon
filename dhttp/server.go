@@ -26,6 +26,7 @@ import (
 
 	"github.com/exograd/go-log"
 	"github.com/go-chi/chi/v5"
+	"github.com/segmentio/ksuid"
 )
 
 type contextKey struct{}
@@ -183,6 +184,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	h.ClientAddress = requestClientAddress(req)
 
+	h.RequestId = requestId(req)
+	if h.RequestId == "" {
+		h.RequestId = ksuid.New().String()
+	}
+
 	defer h.logRequest()
 
 	defer func() {
@@ -252,6 +258,10 @@ func requestClientAddress(req *http.Request) string {
 
 		return host
 	}
+}
+
+func requestId(req *http.Request) string {
+	return req.Header.Get("X-Request-Id")
 }
 
 func requestHandler(req *http.Request) *Handler {

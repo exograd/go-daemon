@@ -43,6 +43,7 @@ type Handler struct {
 	Log    *log.Logger
 
 	ClientAddress string
+	RequestId     string
 
 	Pattern string
 	Method  string
@@ -179,9 +180,10 @@ func (h *Handler) logRequest() {
 	}
 
 	data := log.Data{
+		"address":       h.ClientAddress,
+		"request_id":    h.RequestId,
 		"time":          reqTime.Microseconds(),
 		"response_size": w.ResponseBodySize,
-		"address":       h.ClientAddress,
 	}
 
 	statusString := "-"
