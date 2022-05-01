@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -180,6 +181,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.Request = req.WithContext(ctx)
 	h.ResponseWriter = NewResponseWriter(w)
 
+	h.ClientAddress = requestClientAddress(req)
+
 	defer h.logRequest()
 
 	defer func() {
@@ -229,6 +232,26 @@ func (s *Server) handleMethodNotAllowed(w http.ResponseWriter, req *http.Request
 	h := requestHandler(req)
 
 	h.ReplyError(405, "unhandled_method", "unhandled method")
+}
+
+func requestClientAddress(req *http.Request) string {
+	if v := req.Header.Get("X-Real-IP"); v != "" {
+		return v
+	} else if v := req.Header.Get("X-Forwarded-For"); v != "" {
+		i := strings.Index(v, ", ")
+		if i == -1 {
+			return v
+		}
+
+		return v[:i]
+	} else {
+		host, _, err := net.SplitHostPort(req.RemoteAddr)
+		if err != nil {
+			return ""
+		}
+
+		return host
+	}
 }
 
 func requestHandler(req *http.Request) *Handler {

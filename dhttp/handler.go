@@ -42,6 +42,8 @@ type Handler struct {
 	Server *Server
 	Log    *log.Logger
 
+	ClientAddress string
+
 	Pattern string
 	Method  string
 	RouteId string
@@ -179,6 +181,7 @@ func (h *Handler) logRequest() {
 	data := log.Data{
 		"time":          reqTime.Microseconds(),
 		"response_size": w.ResponseBodySize,
+		"address":       h.ClientAddress,
 	}
 
 	statusString := "-"
