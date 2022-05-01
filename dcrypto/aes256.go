@@ -18,7 +18,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 )
 
@@ -43,6 +45,31 @@ func (key *AES256Key) FromHex(s string) error {
 	}
 
 	copy((*key)[:], data[:32])
+
+	return nil
+}
+
+func (key AES256Key) MarshalJSON() ([]byte, error) {
+	s := base64.StdEncoding.EncodeToString(key[:])
+	return json.Marshal(s)
+}
+
+func (pkey *AES256Key) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	key, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return fmt.Errorf("cannot decode base64 value: %w", err)
+	}
+
+	if len(key) != 32 {
+		return fmt.Errorf("invalid key size (must be 32 bytes long)")
+	}
+
+	copy(pkey[:], key)
 
 	return nil
 }
