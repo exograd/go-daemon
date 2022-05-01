@@ -35,8 +35,12 @@ var (
 
 type RouteFunc func(*Handler)
 
+type ErrorHandler func(*Handler, int, string, string, APIErrorData)
+
 type ServerCfg struct {
 	Log *log.Logger `json:"-"`
+
+	ErrorHandler ErrorHandler `json:"-"`
 
 	Address string `json:"address"`
 
@@ -202,4 +206,13 @@ func (s *Server) Route(pattern, method string, routeFunc RouteFunc) {
 	}
 
 	s.Router.MethodFunc(method, pattern, handlerFunc)
+}
+
+func (s *Server) handleError(h *Handler, status int, code, msg string, data APIErrorData) {
+	if s.Cfg.ErrorHandler == nil {
+		h.ReplyJSON(status, APIError{Message: msg, Code: code, Data: data})
+		return
+	}
+
+	s.Cfg.ErrorHandler(h, status, code, msg, data)
 }

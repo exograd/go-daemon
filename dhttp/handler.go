@@ -123,18 +123,11 @@ func (h *Handler) ReplyNotImplemented(feature string) {
 }
 
 func (h *Handler) ReplyError(status int, code, format string, args ...interface{}) {
-	h.ReplyJSON(status, APIError{
-		Message: fmt.Sprintf(format, args...),
-		Code:    code,
-	})
+	h.Server.handleError(h, status, code, fmt.Sprintf(format, args...), nil)
 }
 
 func (h *Handler) ReplyErrorData(status int, code string, data APIErrorData, format string, args ...interface{}) {
-	h.ReplyJSON(status, APIError{
-		Message: fmt.Sprintf(format, args...),
-		Code:    code,
-		Data:    data,
-	})
+	h.Server.handleError(h, status, code, fmt.Sprintf(format, args...), data)
 }
 
 func (h *Handler) handlePanic(value interface{}) {
