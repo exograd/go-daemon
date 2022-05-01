@@ -77,11 +77,13 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 		Cfg: cfg,
 		Log: cfg.Log,
 
-		Router: chi.NewMux(),
-
 		stopChan:  make(chan struct{}),
 		errorChan: make(chan error),
 	}
+
+	s.Router = chi.NewMux()
+	s.Router.NotFound(s.handleNotFound)
+	s.Router.MethodNotAllowed(s.handleMethodNotAllowed)
 
 	s.server = &http.Server{
 		Addr:     cfg.Address,
@@ -192,7 +194,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (s *Server) Route(pattern, method string, routeFunc RouteFunc) {
 	handlerFunc := func(w http.ResponseWriter, req *http.Request) {
-		h := req.Context().Value(contextKeyHandler).(*Handler)
+		h := requestHandler(req)
 		h.Request = req // the request object was modified by chi
 
 		routeId := pattern + " " + method
@@ -215,4 +217,25 @@ func (s *Server) handleError(h *Handler, status int, code, msg string, data APIE
 	}
 
 	s.Cfg.ErrorHandler(h, status, code, msg, data)
+}
+
+func (s *Server) handleNotFound(w http.ResponseWriter, req *http.Request) {
+	h := requestHandler(req)
+
+	h.ReplyError(404, "route_not_found", "route not found")
+}
+
+func (s *Server) handleMethodNotAllowed(w http.ResponseWriter, req *http.Request) {
+	h := requestHandler(req)
+
+	h.ReplyError(405, "unhandled_method", "unhandled method")
+}
+
+func requestHandler(req *http.Request) *Handler {
+	value := req.Context().Value(contextKeyHandler)
+	if value == nil {
+		return nil
+	}
+
+	return value.(*Handler)
 }
