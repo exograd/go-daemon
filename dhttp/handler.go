@@ -99,6 +99,13 @@ func (h *Handler) ReplyEmpty(status int) {
 	h.Reply(status, nil)
 }
 
+func (h *Handler) ReplyRedirect(status int, uri string) {
+	header := h.ResponseWriter.Header()
+	header.Set("Location", uri)
+
+	h.Reply(status, nil)
+}
+
 func (h *Handler) ReplyJSON(status int, value interface{}) {
 	header := h.ResponseWriter.Header()
 	header.Set("Content-Type", "application/json")
