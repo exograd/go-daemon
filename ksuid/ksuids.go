@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type KSUIDs []KSUID
@@ -54,6 +55,13 @@ func (ids *KSUIDs) Scan(src interface{}) error {
 	switch v := src.(type) {
 	case []string:
 		return ids.Parse(v)
+
+	case string:
+		if len(v) < 2 || v[0] != '{' || v[len(v)-1] != '}' {
+			return fmt.Errorf("invalid format")
+		}
+		parts := strings.Split(v[1:len(v)-1], ",")
+		return ids.Parse(parts)
 
 	default:
 		return fmt.Errorf("invalid value of type %T", v)
