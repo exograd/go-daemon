@@ -9,8 +9,8 @@ import (
 )
 
 type Checker struct {
-	Path   jsonpointer.Pointer
-	Errors ValidationErrors
+	Pointer jsonpointer.Pointer
+	Errors  ValidationErrors
 }
 
 type Object interface {
@@ -18,14 +18,14 @@ type Object interface {
 }
 
 type ValidationError struct {
-	Path    jsonpointer.Pointer `json:"path"`
+	Pointer jsonpointer.Pointer `json:"pointer"`
 	Message string              `json:"message"`
 }
 
 type ValidationErrors []*ValidationError
 
 func (err ValidationError) String() string {
-	return fmt.Sprintf("ValidationError{%v, %q}", err.Path, err.Message)
+	return fmt.Sprintf("ValidationError{%v, %q}", err.Pointer, err.Message)
 }
 
 func (err ValidationError) GoString() string {
@@ -33,7 +33,7 @@ func (err ValidationError) GoString() string {
 }
 
 func (err ValidationError) Error() string {
-	return fmt.Sprintf("%v: %s", err.Path, err.Message)
+	return fmt.Sprintf("%v: %s", err.Pointer, err.Message)
 }
 
 func (errs ValidationErrors) Error() string {
@@ -57,22 +57,22 @@ func (c *Checker) Error() error {
 	return c.Errors
 }
 
-func (c *Checker) Push(pathSegment string) {
-	c.Path = append(c.Path, pathSegment)
+func (c *Checker) Push(token string) {
+	c.Pointer = append(c.Pointer, token)
 }
 
 func (c *Checker) Pop() {
-	c.Path = c.Path[:len(c.Path)-1]
+	c.Pointer = c.Pointer[:len(c.Pointer)-1]
 }
 
-func (c *Checker) Check(pathSegment string, v bool, format string, args ...interface{}) bool {
+func (c *Checker) Check(token string, v bool, format string, args ...interface{}) bool {
 	if !v {
-		path := []string{}
-		path = append(path, c.Path...)
-		path = append(path, pathSegment)
+		var pointer jsonpointer.Pointer
+		pointer = append(pointer, c.Pointer...)
+		pointer.Append(token)
 
 		err := ValidationError{
-			Path:    path,
+			Pointer: pointer,
 			Message: fmt.Sprintf(format, args...),
 		}
 
@@ -82,7 +82,7 @@ func (c *Checker) Check(pathSegment string, v bool, format string, args ...inter
 	return v
 }
 
-func (c *Checker) CheckOptionalObject(pathSegment string, value interface{}) bool {
+func (c *Checker) CheckOptionalObject(token string, value interface{}) bool {
 	valueType := reflect.TypeOf(value)
 	if valueType.Kind() != reflect.Pointer {
 		panic(fmt.Sprintf("value is not a pointer"))
@@ -93,15 +93,15 @@ func (c *Checker) CheckOptionalObject(pathSegment string, value interface{}) boo
 		panic(fmt.Sprintf("value is not an object pointer"))
 	}
 
-	return c.doCheckObject(pathSegment, value)
+	return c.doCheckObject(token, value)
 }
 
-func (c *Checker) CheckObject(pathSegment string, value interface{}) bool {
+func (c *Checker) CheckObject(token string, value interface{}) bool {
 	valueType := reflect.TypeOf(value)
 
 	switch valueType.Kind() {
 	case reflect.Struct:
-		return c.doCheckObject(pathSegment, value)
+		return c.doCheckObject(token, value)
 
 	case reflect.Pointer:
 		pointedValueType := valueType.Elem()
@@ -110,22 +110,22 @@ func (c *Checker) CheckObject(pathSegment string, value interface{}) bool {
 		}
 
 		isNil := reflect.ValueOf(value).IsZero()
-		if !c.Check(pathSegment, !isNil, "missing value") {
+		if !c.Check(token, !isNil, "missing value") {
 			return false
 		}
 
-		return c.CheckOptionalObject(pathSegment, value)
+		return c.CheckOptionalObject(token, value)
 
 	default:
 		panic(fmt.Sprintf("value is neither a pointer nor a structure"))
 	}
 }
 
-func (c *Checker) doCheckObject(pathSegment string, value interface{}) bool {
+func (c *Checker) doCheckObject(token string, value interface{}) bool {
 	nbErrors := len(c.Errors)
 
 	if obj, ok := value.(Object); ok {
-		c.Push(pathSegment)
+		c.Push(token)
 		defer c.Pop()
 
 		obj.Check(c)
@@ -134,43 +134,43 @@ func (c *Checker) doCheckObject(pathSegment string, value interface{}) bool {
 	return len(c.Errors) == nbErrors
 }
 
-func (c *Checker) CheckIntMin(pathSegment string, i, min int) bool {
-	return c.Check(pathSegment, i >= min,
+func (c *Checker) CheckIntMin(token string, i, min int) bool {
+	return c.Check(token, i >= min,
 		"integer %d must be greater or equal to %d", i, min)
 }
 
-func (c *Checker) CheckIntMax(pathSegment string, i, max int) bool {
-	return c.Check(pathSegment, i <= max,
+func (c *Checker) CheckIntMax(token string, i, max int) bool {
+	return c.Check(token, i <= max,
 		"integer %d must be lower or equal to %d", i, max)
 }
 
-func (c *Checker) CheckIntMinMax(pathSegment string, i, min, max int) bool {
-	if !c.CheckIntMin(pathSegment, i, min) {
+func (c *Checker) CheckIntMinMax(token string, i, min, max int) bool {
+	if !c.CheckIntMin(token, i, min) {
 		return false
 	}
 
-	return c.CheckIntMax(pathSegment, i, max)
+	return c.CheckIntMax(token, i, max)
 }
 
-func (c *Checker) CheckStringLengthMin(pathSegment string, s string, min int) bool {
-	return c.Check(pathSegment, len(s) >= min,
+func (c *Checker) CheckStringLengthMin(token string, s string, min int) bool {
+	return c.Check(token, len(s) >= min,
 		"string length must be greater or equal to %d", min)
 }
 
-func (c *Checker) CheckStringLengthMax(pathSegment string, s string, max int) bool {
-	return c.Check(pathSegment, len(s) <= max,
+func (c *Checker) CheckStringLengthMax(token string, s string, max int) bool {
+	return c.Check(token, len(s) <= max,
 		"string length must be lower or equal to %d", max)
 }
 
-func (c *Checker) CheckStringLengthMinMax(pathSegment string, s string, min, max int) bool {
-	if !c.CheckStringLengthMin(pathSegment, s, min) {
+func (c *Checker) CheckStringLengthMinMax(token string, s string, min, max int) bool {
+	if !c.CheckStringLengthMin(token, s, min) {
 		return false
 	}
 
-	return c.CheckStringLengthMax(pathSegment, s, max)
+	return c.CheckStringLengthMax(token, s, max)
 }
 
-func (c *Checker) CheckStringNotEmpty(pathSegment string, s string) bool {
-	return c.Check(pathSegment, s != "",
+func (c *Checker) CheckStringNotEmpty(token string, s string) bool {
+	return c.Check(token, s != "",
 		"string must not be empty")
 }

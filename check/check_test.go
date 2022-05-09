@@ -60,8 +60,8 @@ func TestCheckTest(t *testing.T) {
 	assert.False(c.CheckObject("d1", obj.D1))
 
 	assert.Equal(4, len(c.Errors))
-	assert.Equal(jsonpointer.Pointer{"a"}, c.Errors[0].Path)
-	assert.Equal(jsonpointer.Pointer{"b"}, c.Errors[1].Path)
-	assert.Equal(jsonpointer.Pointer{"c2"}, c.Errors[2].Path)
-	assert.Equal(jsonpointer.Pointer{"d1", "a2"}, c.Errors[3].Path)
+	assert.Equal(jsonpointer.Pointer{"a"}, c.Errors[0].Pointer)
+	assert.Equal(jsonpointer.Pointer{"b"}, c.Errors[1].Pointer)
+	assert.Equal(jsonpointer.Pointer{"c2"}, c.Errors[2].Pointer)
+	assert.Equal(jsonpointer.Pointer{"d1", "a2"}, c.Errors[3].Pointer)
 }
