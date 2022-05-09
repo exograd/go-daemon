@@ -1,23 +1,26 @@
 package check
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 )
 
 type Checker struct {
 	Path   []string
-	Errors []*ValidationError
+	Errors ValidationErrors
 }
 
 type Object interface {
-	Check(*Checker) bool
+	Check(*Checker)
 }
 
 type ValidationError struct {
 	Path    []string
 	Message string
 }
+
+type ValidationErrors []*ValidationError
 
 func (err ValidationError) String() string {
 	return fmt.Sprintf("ValidationError{%v, %q}", err.Path, err.Message)
@@ -31,8 +34,25 @@ func (err ValidationError) Error() string {
 	return fmt.Sprintf("%v: %s", err.Path, err.Message) // TODO json path
 }
 
+func (errs ValidationErrors) Error() string {
+	var buf bytes.Buffer
+	for _, err := range errs {
+		buf.WriteString(err.Error())
+		buf.WriteByte('\n')
+	}
+	return buf.String()
+}
+
 func NewChecker() *Checker {
 	return &Checker{}
+}
+
+func (c *Checker) Error() error {
+	if len(c.Errors) == 0 {
+		return nil
+	}
+
+	return c.Errors
 }
 
 func (c *Checker) Push(pathSegment string) {
@@ -71,14 +91,7 @@ func (c *Checker) CheckOptionalObject(pathSegment string, value interface{}) boo
 		panic(fmt.Sprintf("value is not an object pointer"))
 	}
 
-	if obj, ok := value.(Object); ok {
-		c.Push(pathSegment)
-		defer c.Pop()
-
-		return obj.Check(c)
-	}
-
-	return true
+	return c.doCheckObject(pathSegment, value)
 }
 
 func (c *Checker) CheckObject(pathSegment string, value interface{}) bool {
@@ -86,13 +99,7 @@ func (c *Checker) CheckObject(pathSegment string, value interface{}) bool {
 
 	switch valueType.Kind() {
 	case reflect.Struct:
-		if obj, ok := value.(Object); ok {
-			c.Push(pathSegment)
-			defer c.Pop()
-
-			return obj.Check(c)
-		}
-		return true
+		return c.doCheckObject(pathSegment, value)
 
 	case reflect.Pointer:
 		pointedValueType := valueType.Elem()
@@ -110,6 +117,19 @@ func (c *Checker) CheckObject(pathSegment string, value interface{}) bool {
 	default:
 		panic(fmt.Sprintf("value is neither a pointer nor a structure"))
 	}
+}
+
+func (c *Checker) doCheckObject(pathSegment string, value interface{}) bool {
+	nbErrors := len(c.Errors)
+
+	if obj, ok := value.(Object); ok {
+		c.Push(pathSegment)
+		defer c.Pop()
+
+		obj.Check(c)
+	}
+
+	return len(c.Errors) == nbErrors
 }
 
 func (c *Checker) CheckIntMin(pathSegment string, i, min int) bool {

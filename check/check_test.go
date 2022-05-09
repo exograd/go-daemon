@@ -25,8 +25,8 @@ type testCheckSubObject2 struct {
 	A2 int
 }
 
-func (obj *testCheckSubObject2) Check(c *Checker) bool {
-	return c.CheckIntMax("a2", obj.A2, 100)
+func (obj *testCheckSubObject2) Check(c *Checker) {
+	c.CheckIntMax("a2", obj.A2, 100)
 }
 
 func TestCheckTest(t *testing.T) {

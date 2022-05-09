@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/exograd/go-daemon/check"
 	"github.com/exograd/go-log"
 	"github.com/go-chi/chi/v5"
 )
@@ -79,6 +80,30 @@ func (h *Handler) JSONRequestData(dest interface{}) error {
 		h.ReplyError(400, "invalid_request_body",
 			"invalid request body: %v", err)
 		return fmt.Errorf("invalid request body: %w", err)
+	}
+
+	return nil
+}
+
+func (h *Handler) JSONRequestObject(dest interface{}) error {
+	if err := h.JSONRequestData(dest); err != nil {
+		return err
+	}
+
+	if obj, ok := dest.(check.Object); ok {
+		checker := check.NewChecker()
+
+		obj.Check(checker)
+		if err := checker.Error(); err != nil {
+			data := map[string]interface{}{
+				"validation_errors": checker.Errors,
+			}
+
+			h.ReplyErrorData(400, "invalid_request_body", data,
+				"invalid request body:\n%v", err)
+
+			return fmt.Errorf("invalid request body: %w", err)
+		}
 	}
 
 	return nil
