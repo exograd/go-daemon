@@ -3,6 +3,7 @@ package check
 import (
 	"testing"
 
+	"github.com/exograd/go-daemon/jsonpointer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,8 +60,8 @@ func TestCheckTest(t *testing.T) {
 	assert.False(c.CheckObject("d1", obj.D1))
 
 	assert.Equal(4, len(c.Errors))
-	assert.Equal([]string{"a"}, c.Errors[0].Path)
-	assert.Equal([]string{"b"}, c.Errors[1].Path)
-	assert.Equal([]string{"c2"}, c.Errors[2].Path)
-	assert.Equal([]string{"d1", "a2"}, c.Errors[3].Path)
+	assert.Equal(jsonpointer.Pointer{"a"}, c.Errors[0].Path)
+	assert.Equal(jsonpointer.Pointer{"b"}, c.Errors[1].Path)
+	assert.Equal(jsonpointer.Pointer{"c2"}, c.Errors[2].Path)
+	assert.Equal(jsonpointer.Pointer{"d1", "a2"}, c.Errors[3].Path)
 }

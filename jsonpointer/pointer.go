@@ -2,6 +2,7 @@ package jsonpointer
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"strings"
 )
@@ -51,6 +52,19 @@ func (p Pointer) String() string {
 	}
 
 	return buf.String()
+}
+
+func (p Pointer) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.String())
+}
+
+func (p *Pointer) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	return p.Parse(s)
 }
 
 func (p *Pointer) Append(token string) {

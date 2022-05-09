@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+
+	"github.com/exograd/go-daemon/jsonpointer"
 )
 
 type Checker struct {
-	Path   []string
+	Path   jsonpointer.Pointer
 	Errors ValidationErrors
 }
 
@@ -16,8 +18,8 @@ type Object interface {
 }
 
 type ValidationError struct {
-	Path    []string
-	Message string
+	Path    jsonpointer.Pointer `json:"path"`
+	Message string              `json:"message"`
 }
 
 type ValidationErrors []*ValidationError
@@ -31,7 +33,7 @@ func (err ValidationError) GoString() string {
 }
 
 func (err ValidationError) Error() string {
-	return fmt.Sprintf("%v: %s", err.Path, err.Message) // TODO json path
+	return fmt.Sprintf("%v: %s", err.Path, err.Message)
 }
 
 func (errs ValidationErrors) Error() string {
@@ -134,12 +136,12 @@ func (c *Checker) doCheckObject(pathSegment string, value interface{}) bool {
 
 func (c *Checker) CheckIntMin(pathSegment string, i, min int) bool {
 	return c.Check(pathSegment, i >= min,
-		"value %d must be greater or equal to %d", i, min)
+		"integer %d must be greater or equal to %d", i, min)
 }
 
 func (c *Checker) CheckIntMax(pathSegment string, i, max int) bool {
 	return c.Check(pathSegment, i <= max,
-		"value %d must be lower or equal to %d", i, max)
+		"integer %d must be lower or equal to %d", i, max)
 }
 
 func (c *Checker) CheckIntMinMax(pathSegment string, i, min, max int) bool {
