@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/exograd/go-daemon/ksuid"
 	"github.com/exograd/go-log"
 	"github.com/go-chi/chi/v5"
-	"github.com/segmentio/ksuid"
 )
 
 type contextKey struct{}
@@ -186,7 +186,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	h.RequestId = requestId(req)
 	if h.RequestId == "" {
-		h.RequestId = ksuid.New().String()
+		h.RequestId = ksuid.Generate().String()
 	}
 
 	defer h.logRequest()
