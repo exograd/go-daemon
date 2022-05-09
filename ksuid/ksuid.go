@@ -15,6 +15,8 @@ import (
 
 type KSUID [20]byte
 
+const Epoch = 1_400_000_000
+
 var Zero = KSUID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 var ErrInvalidFormat = errors.New("invalid format")
@@ -25,12 +27,18 @@ func Generate() KSUID {
 
 func GenerateWithTime(t time.Time) KSUID {
 	timestamp := t.Unix()
+
+	if timestamp < Epoch {
+		panic(fmt.Sprintf("timestamp %d too small (min: %d)",
+			timestamp, Epoch))
+	}
+
 	if timestamp > math.MaxUint32 {
-		panic(fmt.Sprintf("timestamp %d too large (max: %v)",
+		panic(fmt.Sprintf("timestamp %d too large (max: %d)",
 			timestamp, math.MaxUint32))
 	}
 
-	return GenerateWithTimestamp(uint32(timestamp))
+	return GenerateWithTimestamp(uint32(timestamp - Epoch))
 }
 
 func GenerateWithTimestamp(timestamp uint32) KSUID {
@@ -73,7 +81,7 @@ func (id KSUID) Timestamp() uint32 {
 }
 
 func (id KSUID) Time() time.Time {
-	return time.Unix(int64(id.Timestamp()), 0).UTC()
+	return time.Unix(int64(Epoch+id.Timestamp()), 0).UTC()
 }
 
 func (id KSUID) IsZero() bool {

@@ -43,7 +43,7 @@ func TestKSUIDTime(t *testing.T) {
 	date := time.Date(2020, 2, 1, 10, 20, 30, 0, time.UTC)
 	id := GenerateWithTime(date)
 
-	assert.Equal(date.Unix(), int64(id.Timestamp()))
+	assert.Equal(date.Unix(), int64(Epoch+id.Timestamp()))
 	assert.Equal(date, id.Time())
 }
 
