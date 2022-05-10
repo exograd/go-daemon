@@ -85,25 +85,23 @@ func (h *Handler) JSONRequestData(dest interface{}) error {
 	return nil
 }
 
-func (h *Handler) JSONRequestObject(dest interface{}) error {
-	if err := h.JSONRequestData(dest); err != nil {
+func (h *Handler) JSONRequestObject(obj check.Object) error {
+	if err := h.JSONRequestData(obj); err != nil {
 		return err
 	}
 
-	if obj, ok := dest.(check.Object); ok {
-		checker := check.NewChecker()
+	checker := check.NewChecker()
 
-		obj.Check(checker)
-		if err := checker.Error(); err != nil {
-			data := map[string]interface{}{
-				"validation_errors": checker.Errors,
-			}
-
-			h.ReplyErrorData(400, "invalid_request_body", data,
-				"invalid request body:\n%v", err)
-
-			return fmt.Errorf("invalid request body: %w", err)
+	obj.Check(checker)
+	if err := checker.Error(); err != nil {
+		data := map[string]interface{}{
+			"validation_errors": checker.Errors,
 		}
+
+		h.ReplyErrorData(400, "invalid_request_body", data,
+			"invalid request body:\n%v", err)
+
+		return fmt.Errorf("invalid request body: %w", err)
 	}
 
 	return nil
