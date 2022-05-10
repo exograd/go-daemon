@@ -207,7 +207,7 @@ func (c *Checker) CheckStringValue(token string, s string, values []string) bool
 	return found
 }
 
-func (c *Checker) CheckStringMatch(token string, s string, re regexp.Regexp) bool {
+func (c *Checker) CheckStringMatch(token string, s string, re *regexp.Regexp) bool {
 	if !re.MatchString(s) {
 		c.AddError(token,
 			"string must match the following regular expression: %s",
