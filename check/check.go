@@ -119,7 +119,7 @@ func (c *Checker) CheckObject(token string, value interface{}) bool {
 			return false
 		}
 
-		return c.CheckOptionalObject(token, value)
+		return c.doCheckObject(token, value)
 
 	default:
 		panic(fmt.Sprintf("value is neither a pointer nor a structure"))
