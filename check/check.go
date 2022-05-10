@@ -65,18 +65,22 @@ func (c *Checker) Pop() {
 	c.Pointer = c.Pointer[:len(c.Pointer)-1]
 }
 
+func (c *Checker) AddError(token string, format string, args ...interface{}) {
+	var pointer jsonpointer.Pointer
+	pointer = append(pointer, c.Pointer...)
+	pointer.Append(token)
+
+	err := ValidationError{
+		Pointer: pointer,
+		Message: fmt.Sprintf(format, args...),
+	}
+
+	c.Errors = append(c.Errors, &err)
+}
+
 func (c *Checker) Check(token string, v bool, format string, args ...interface{}) bool {
 	if !v {
-		var pointer jsonpointer.Pointer
-		pointer = append(pointer, c.Pointer...)
-		pointer.Append(token)
-
-		err := ValidationError{
-			Pointer: pointer,
-			Message: fmt.Sprintf(format, args...),
-		}
-
-		c.Errors = append(c.Errors, &err)
+		c.AddError(token, format, args...)
 	}
 
 	return v
@@ -173,4 +177,31 @@ func (c *Checker) CheckStringLengthMinMax(token string, s string, min, max int) 
 func (c *Checker) CheckStringNotEmpty(token string, s string) bool {
 	return c.Check(token, s != "",
 		"string must not be empty")
+}
+
+func (c *Checker) CheckStringValue(token string, s string, values []string) bool {
+	found := false
+	for _, v := range values {
+		if v == s {
+			found = true
+		}
+	}
+
+	var buf bytes.Buffer
+
+	buf.WriteString("value must be one of the following strings: ")
+
+	for i, v := range values {
+		if i > 0 {
+			buf.WriteString(", ")
+		}
+
+		buf.WriteString(v)
+	}
+
+	if !found {
+		c.AddError(token, "%s", buf.String())
+	}
+
+	return found
 }
