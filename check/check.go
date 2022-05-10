@@ -128,10 +128,28 @@ func (c *Checker) CheckStringNotEmpty(token string, s string) bool {
 		"string must not be empty")
 }
 
-func (c *Checker) CheckStringValue(token string, s string, values []string) bool {
+func (c *Checker) CheckStringValue(token string, value interface{}, values interface{}) bool {
+	valueType := reflect.TypeOf(value)
+	if valueType.Kind() != reflect.String {
+		panicf("value %#v (%T) is not a string", value, value)
+	}
+
+	s := reflect.ValueOf(value).String()
+
+	valuesType := reflect.TypeOf(values)
+	if valuesType.Kind() != reflect.Slice {
+		panicf("values %#v (%T) are not a slice", values, values)
+	}
+	if valuesType.Elem().Kind() != reflect.String {
+		panicf("values %#v (%T) are not a slice of strings", values, values)
+	}
+
+	valuesValue := reflect.ValueOf(values)
+
 	found := false
-	for _, v := range values {
-		if v == s {
+	for i := 0; i < valuesValue.Len(); i++ {
+		s2 := valuesValue.Index(i).String()
+		if s == s2 {
 			found = true
 		}
 	}
@@ -140,12 +158,13 @@ func (c *Checker) CheckStringValue(token string, s string, values []string) bool
 
 	buf.WriteString("value must be one of the following strings: ")
 
-	for i, v := range values {
+	for i := 0; i < valuesValue.Len(); i++ {
 		if i > 0 {
 			buf.WriteString(", ")
 		}
 
-		buf.WriteString(v)
+		s2 := valuesValue.Index(i).String()
+		buf.WriteString(s2)
 	}
 
 	if !found {
@@ -213,7 +232,7 @@ func checkArray(value interface{}, plen *int) {
 		*plen = valueType.Len()
 
 	default:
-		panic(fmt.Sprintf("value is not a slice or array"))
+		panicf("value is not a slice or array")
 	}
 }
 
@@ -255,13 +274,17 @@ func (c *Checker) doCheckObject(token string, value interface{}) bool {
 func checkObject(value interface{}, pnil *bool) {
 	valueType := reflect.TypeOf(value)
 	if valueType.Kind() != reflect.Pointer {
-		panic(fmt.Sprintf("value is not a pointer"))
+		panicf("value %#v (%T) is not a pointer", value, value)
 	}
 
 	pointedValueType := valueType.Elem()
 	if pointedValueType.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("value is not an object pointer"))
+		panicf("value %#v (%T) is not an object pointer", value, value)
 	}
 
 	*pnil = reflect.ValueOf(value).IsZero()
+}
+
+func panicf(format string, args ...interface{}) {
+	panic(fmt.Sprintf(format, args...))
 }

@@ -8,23 +8,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type checkTestObj1 struct {
-	A *checkTestObj2
-	B *checkTestObj2
+type testObj1 struct {
+	A *testObj2
+	B *testObj2
 }
 
-func (obj *checkTestObj1) Check(c *Checker) {
+func (obj *testObj1) Check(c *Checker) {
 	c.CheckObject("a", obj.A)
 	c.CheckOptionalObject("b", obj.B)
 }
 
-type checkTestObj2 struct {
+type testObj2 struct {
 	C int
 }
 
-func (obj *checkTestObj2) Check(c *Checker) {
+func (obj *testObj2) Check(c *Checker) {
 	c.CheckIntMin("c", obj.C, 1)
 }
+
+type testEnum string
+
+const (
+	testEnumFoo testEnum = "foo"
+	testEnumBar testEnum = "bar"
+)
+
+var testEnumValues = []testEnum{testEnumFoo, testEnumBar}
 
 func TestCheckTest(t *testing.T) {
 	assert := assert.New(t)
@@ -66,6 +75,14 @@ func TestCheckTest(t *testing.T) {
 		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
+	// String types
+	c = NewChecker()
+	assert.True(c.CheckStringValue("t", testEnumFoo, testEnumValues))
+	assert.False(c.CheckStringValue("t", "unknown", testEnumValues))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
+
 	// Slices
 	c = NewChecker()
 	assert.True(c.CheckArrayLengthMin("t", []int{1, 2, 3}, 1))
@@ -88,16 +105,16 @@ func TestCheckTest(t *testing.T) {
 
 	// Objects
 	c = NewChecker()
-	obj1 := &checkTestObj1{
-		A: &checkTestObj2{C: 1},
-		B: &checkTestObj2{C: 2},
+	obj1 := &testObj1{
+		A: &testObj2{C: 1},
+		B: &testObj2{C: 2},
 	}
 	assert.True(c.CheckObject("t", obj1))
 
 	c = NewChecker()
-	obj2 := &checkTestObj1{
-		A: &checkTestObj2{C: 1},
-		B: &checkTestObj2{},
+	obj2 := &testObj1{
+		A: &testObj2{C: 1},
+		B: &testObj2{},
 	}
 	assert.False(c.CheckObject("t", obj2))
 	if assert.Equal(1, len(c.Errors)) {
@@ -105,16 +122,16 @@ func TestCheckTest(t *testing.T) {
 	}
 
 	c = NewChecker()
-	obj3 := &checkTestObj1{
-		A: &checkTestObj2{C: 1},
+	obj3 := &testObj1{
+		A: &testObj2{C: 1},
 		B: nil,
 	}
 	assert.True(c.CheckObject("t", obj3))
 
 	c = NewChecker()
-	obj4 := &checkTestObj1{
+	obj4 := &testObj1{
 		A: nil,
-		B: &checkTestObj2{C: 1},
+		B: &testObj2{C: 1},
 	}
 	assert.False(c.CheckObject("t", obj4))
 	if assert.Equal(1, len(c.Errors)) {
