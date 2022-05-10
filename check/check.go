@@ -87,58 +87,6 @@ func (c *Checker) Check(token string, v bool, format string, args ...interface{}
 	return v
 }
 
-func (c *Checker) CheckOptionalObject(token string, value interface{}) bool {
-	valueType := reflect.TypeOf(value)
-	if valueType.Kind() != reflect.Pointer {
-		panic(fmt.Sprintf("value is not a pointer"))
-	}
-
-	pointedValueType := valueType.Elem()
-	if pointedValueType.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("value is not an object pointer"))
-	}
-
-	return c.doCheckObject(token, value)
-}
-
-func (c *Checker) CheckObject(token string, value interface{}) bool {
-	valueType := reflect.TypeOf(value)
-
-	switch valueType.Kind() {
-	case reflect.Struct:
-		return c.doCheckObject(token, value)
-
-	case reflect.Pointer:
-		pointedValueType := valueType.Elem()
-		if pointedValueType.Kind() != reflect.Struct {
-			panic(fmt.Sprintf("value is not an object pointer"))
-		}
-
-		isNil := reflect.ValueOf(value).IsZero()
-		if !c.Check(token, !isNil, "missing value") {
-			return false
-		}
-
-		return c.doCheckObject(token, value)
-
-	default:
-		panic(fmt.Sprintf("value is neither a pointer nor a structure"))
-	}
-}
-
-func (c *Checker) doCheckObject(token string, value interface{}) bool {
-	nbErrors := len(c.Errors)
-
-	if obj, ok := value.(Object); ok {
-		c.Push(token)
-		defer c.Pop()
-
-		obj.Check(c)
-	}
-
-	return len(c.Errors) == nbErrors
-}
-
 func (c *Checker) CheckIntMin(token string, i, min int) bool {
 	return c.Check(token, i >= min,
 		"integer %d must be greater or equal to %d", i, min)
@@ -267,4 +215,53 @@ func checkArray(value interface{}, plen *int) {
 	default:
 		panic(fmt.Sprintf("value is not a slice or array"))
 	}
+}
+
+func (c *Checker) CheckOptionalObject(token string, value interface{}) bool {
+	var isNil bool
+	checkObject(value, &isNil)
+
+	if isNil {
+		return true
+	}
+
+	return c.doCheckObject(token, value)
+}
+
+func (c *Checker) CheckObject(token string, value interface{}) bool {
+	var isNil bool
+	checkObject(value, &isNil)
+
+	if !c.Check(token, !isNil, "missing value") {
+		return false
+	}
+
+	return c.doCheckObject(token, value)
+}
+
+func (c *Checker) doCheckObject(token string, value interface{}) bool {
+	nbErrors := len(c.Errors)
+
+	if obj, ok := value.(Object); ok {
+		c.Push(token)
+		defer c.Pop()
+
+		obj.Check(c)
+	}
+
+	return len(c.Errors) == nbErrors
+}
+
+func checkObject(value interface{}, pnil *bool) {
+	valueType := reflect.TypeOf(value)
+	if valueType.Kind() != reflect.Pointer {
+		panic(fmt.Sprintf("value is not a pointer"))
+	}
+
+	pointedValueType := valueType.Elem()
+	if pointedValueType.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("value is not an object pointer"))
+	}
+
+	*pnil = reflect.ValueOf(value).IsZero()
 }

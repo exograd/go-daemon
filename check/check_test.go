@@ -1,33 +1,29 @@
 package check
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/exograd/go-daemon/jsonpointer"
 	"github.com/stretchr/testify/assert"
 )
 
-type testCheckObject struct {
-	A int
-	B string
-
-	C1 *testCheckSubObject1
-	C2 *testCheckSubObject1
-
-	D1 *testCheckSubObject2
-	D2 *testCheckSubObject2
+type checkTestObj1 struct {
+	A *checkTestObj2
+	B *checkTestObj2
 }
 
-type testCheckSubObject1 struct {
-	A1 int
+func (obj *checkTestObj1) Check(c *Checker) {
+	c.CheckObject("a", obj.A)
+	c.CheckOptionalObject("b", obj.B)
 }
 
-type testCheckSubObject2 struct {
-	A2 int
+type checkTestObj2 struct {
+	C int
 }
 
-func (obj *testCheckSubObject2) Check(c *Checker) {
-	c.CheckIntMax("a2", obj.A2, 100)
+func (obj *checkTestObj2) Check(c *Checker) {
+	c.CheckIntMin("c", obj.C, 1)
 }
 
 func TestCheckTest(t *testing.T) {
@@ -35,33 +31,93 @@ func TestCheckTest(t *testing.T) {
 
 	var c *Checker
 
-	obj := testCheckObject{
-		A: 42,
-		B: "foo",
-		C1: &testCheckSubObject1{
-			A1: 123,
-		},
-		D1: &testCheckSubObject2{
-			A2: 456,
-		},
+	// Integers
+	c = NewChecker()
+	assert.True(c.CheckIntMin("t", 42, 1))
+	assert.True(c.CheckIntMax("t", 42, 100))
+	assert.True(c.CheckIntMinMax("t", 42, 1, 100))
+	assert.False(c.CheckIntMinMax("t", 42, 100, 120))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
+
+	// Strings
+	c = NewChecker()
+	assert.True(c.CheckStringLengthMin("t", "foo", 1))
+	assert.True(c.CheckStringLengthMax("t", "foo", 10))
+	assert.True(c.CheckStringLengthMinMax("t", "foo", 1, 10))
+	assert.False(c.CheckStringLengthMinMax("t", "foo", 5, 10))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	c = NewChecker()
+	assert.True(c.CheckStringValue("t", "x", []string{"x", "y", "z"}))
+	assert.False(c.CheckStringValue("t", "w", []string{"x", "y", "z"}))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
 
-	assert.True(c.CheckIntMinMax("a", obj.A, 1, 100))
-	assert.True(c.CheckStringLengthMinMax("b", obj.B, 3, 5))
-	assert.True(c.CheckObject("c1", obj.C1))
-	assert.True(c.CheckOptionalObject("c1", obj.C1))
-	assert.True(c.CheckOptionalObject("c2", obj.C2))
+	c = NewChecker()
+	re := regexp.MustCompile("^x")
+	assert.True(c.CheckStringMatch("t", "x1", re))
+	assert.False(c.CheckStringMatch("t", "y1", re))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
 
-	assert.False(c.CheckIntMax("a", obj.A, 10))
-	assert.False(c.CheckStringLengthMin("b", obj.B, 5))
-	assert.False(c.CheckObject("c2", obj.C2))
-	assert.False(c.CheckObject("d1", obj.D1))
+	// Slices
+	c = NewChecker()
+	assert.True(c.CheckArrayLengthMin("t", []int{1, 2, 3}, 1))
+	assert.True(c.CheckArrayLengthMax("t", []int{1, 2, 3}, 10))
+	assert.True(c.CheckArrayLengthMinMax("t", []int{1, 2, 3}, 1, 10))
+	assert.False(c.CheckArrayLengthMinMax("t", []int{1, 2, 3}, 5, 10))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
 
-	assert.Equal(4, len(c.Errors))
-	assert.Equal(jsonpointer.Pointer{"a"}, c.Errors[0].Pointer)
-	assert.Equal(jsonpointer.Pointer{"b"}, c.Errors[1].Pointer)
-	assert.Equal(jsonpointer.Pointer{"c2"}, c.Errors[2].Pointer)
-	assert.Equal(jsonpointer.Pointer{"d1", "a2"}, c.Errors[3].Pointer)
+	// Arrays
+	c = NewChecker()
+	assert.True(c.CheckArrayLengthMin("t", [3]int{1, 2, 3}, 1))
+	assert.True(c.CheckArrayLengthMax("t", [3]int{1, 2, 3}, 10))
+	assert.True(c.CheckArrayLengthMinMax("t", [3]int{1, 2, 3}, 1, 10))
+	assert.False(c.CheckArrayLengthMinMax("t", [3]int{1, 2, 3}, 5, 10))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
+
+	// Objects
+	c = NewChecker()
+	obj1 := &checkTestObj1{
+		A: &checkTestObj2{C: 1},
+		B: &checkTestObj2{C: 2},
+	}
+	assert.True(c.CheckObject("t", obj1))
+
+	c = NewChecker()
+	obj2 := &checkTestObj1{
+		A: &checkTestObj2{C: 1},
+		B: &checkTestObj2{},
+	}
+	assert.False(c.CheckObject("t", obj2))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t", "b", "c"}, c.Errors[0].Pointer)
+	}
+
+	c = NewChecker()
+	obj3 := &checkTestObj1{
+		A: &checkTestObj2{C: 1},
+		B: nil,
+	}
+	assert.True(c.CheckObject("t", obj3))
+
+	c = NewChecker()
+	obj4 := &checkTestObj1{
+		A: nil,
+		B: &checkTestObj2{C: 1},
+	}
+	assert.False(c.CheckObject("t", obj4))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t", "a"}, c.Errors[0].Pointer)
+	}
 }
