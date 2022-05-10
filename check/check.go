@@ -227,3 +227,44 @@ func (c *Checker) CheckStringMatch2(token string, s string, re *regexp.Regexp, f
 
 	return true
 }
+
+func (c *Checker) CheckArrayLengthMin(token string, value interface{}, min int) bool {
+	var length int
+
+	checkArray(value, &length)
+
+	return c.Check(token, length >= min,
+		"array must contain %d or more elements", min)
+}
+
+func (c *Checker) CheckArrayLengthMax(token string, value interface{}, max int) bool {
+	var length int
+
+	checkArray(value, &length)
+
+	return c.Check(token, length <= max,
+		"array must contain %d or less elements", max)
+}
+
+func (c *Checker) CheckArrayLengthMinMax(token string, value interface{}, min, max int) bool {
+	if !c.CheckArrayLengthMin(token, value, min) {
+		return false
+	}
+
+	return c.CheckArrayLengthMax(token, value, max)
+}
+
+func checkArray(value interface{}, plen *int) {
+	valueType := reflect.TypeOf(value)
+
+	switch valueType.Kind() {
+	case reflect.Slice:
+		*plen = reflect.ValueOf(value).Len()
+
+	case reflect.Array:
+		*plen = valueType.Len()
+
+	default:
+		panic(fmt.Sprintf("value is not a slice or array"))
+	}
+}
