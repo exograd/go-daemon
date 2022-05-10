@@ -218,3 +218,12 @@ func (c *Checker) CheckStringMatch(token string, s string, re *regexp.Regexp) bo
 
 	return true
 }
+
+func (c *Checker) CheckStringMatch2(token string, s string, re *regexp.Regexp, format string, args ...interface{}) bool {
+	if !re.MatchString(s) {
+		c.AddError(token, format, args...)
+		return false
+	}
+
+	return true
+}
