@@ -189,6 +189,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.RequestId = ksuid.Generate().String()
 	}
 
+	h.Query = req.URL.Query()
+
 	defer h.logRequest()
 
 	defer func() {

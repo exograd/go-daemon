@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"net/url"
 	"runtime"
 	"strconv"
 	"time"
@@ -49,6 +50,7 @@ type Handler struct {
 	Pattern string
 	Method  string
 	RouteId string
+	Query   url.Values
 
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
@@ -58,6 +60,14 @@ type Handler struct {
 
 func (h *Handler) RouteVariable(name string) string {
 	return chi.URLParam(h.Request, name)
+}
+
+func (h *Handler) HasQueryParameter(name string) bool {
+	return h.Query.Has(name)
+}
+
+func (h *Handler) QueryParameter(name string) string {
+	return h.Query.Get(name)
 }
 
 func (h *Handler) RequestData() ([]byte, error) {
