@@ -75,6 +75,13 @@ func TestCheckTest(t *testing.T) {
 		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
+	c = NewChecker()
+	assert.True(c.CheckStringURI("t", "http://example.com"))
+	assert.False(c.CheckStringURI("t", ""))
+	if assert.Equal(1, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+	}
+
 	// String types
 	c = NewChecker()
 	assert.True(c.CheckStringValue("t", testEnumFoo, testEnumValues))

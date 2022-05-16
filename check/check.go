@@ -3,8 +3,10 @@ package check
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strconv"
 
 	"github.com/exograd/go-daemon/jsonpointer"
 )
@@ -64,6 +66,21 @@ func (c *Checker) Push(token string) {
 
 func (c *Checker) Pop() {
 	c.Pointer = c.Pointer[:len(c.Pointer)-1]
+}
+
+func (c *Checker) WithChild(tokenOrIndex interface{}, fn func()) {
+	var token string
+	switch v := tokenOrIndex.(type) {
+	case string:
+		token = v
+	case int:
+		token = strconv.Itoa(v)
+	}
+
+	c.Push(token)
+	defer c.Pop()
+
+	fn()
 }
 
 func (c *Checker) AddError(token string, format string, args ...interface{}) {
@@ -189,6 +206,21 @@ func (c *Checker) CheckStringMatch2(token string, s string, re *regexp.Regexp, f
 	return true
 }
 
+func (c *Checker) CheckStringURI(token string, s string) bool {
+	// The url.Parse function considers that the empty string is a valid URL.
+	// It is not.
+
+	if s == "" {
+		c.AddError(token, "string must be a valid uri")
+		return false
+	} else if _, err := url.Parse(s); err != nil {
+		c.AddError(token, "string must be a valid uri")
+		return false
+	}
+
+	return true
+}
+
 func (c *Checker) CheckArrayLengthMin(token string, value interface{}, min int) bool {
 	var length int
 
@@ -213,6 +245,14 @@ func (c *Checker) CheckArrayLengthMinMax(token string, value interface{}, min, m
 	}
 
 	return c.CheckArrayLengthMax(token, value, max)
+}
+
+func (c *Checker) CheckArrayNotEmpty(token string, value interface{}) bool {
+	var length int
+
+	checkArray(value, &length)
+
+	return c.Check(token, length > 0, "array must not be empty")
 }
 
 func checkArray(value interface{}, plen *int) {
@@ -256,10 +296,9 @@ func (c *Checker) doCheckObject(token string, value interface{}) bool {
 	nbErrors := len(c.Errors)
 
 	if obj, ok := value.(Object); ok {
-		c.Push(token)
-		defer c.Pop()
-
-		obj.Check(c)
+		c.WithChild(token, func() {
+			obj.Check(c)
+		})
 	}
 
 	return len(c.Errors) == nbErrors
