@@ -175,15 +175,9 @@ func (c *Checker) CheckStringValue(token string, value interface{}, values inter
 }
 
 func (c *Checker) CheckStringMatch(token string, s string, re *regexp.Regexp) bool {
-	if !re.MatchString(s) {
-		c.AddError(token,
-			"string must match the following regular expression: %s",
-			re.String())
-
-		return false
-	}
-
-	return true
+	return c.CheckStringMatch2(token, s, re,
+		"string must match the following regular expression: %s",
+		re.String())
 }
 
 func (c *Checker) CheckStringMatch2(token string, s string, re *regexp.Regexp, format string, args ...interface{}) bool {
