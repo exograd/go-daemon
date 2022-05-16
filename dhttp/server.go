@@ -183,11 +183,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.ResponseWriter = NewResponseWriter(w)
 
 	h.ClientAddress = requestClientAddress(req)
+	h.Log.Data["address"] = h.ClientAddress
 
 	h.RequestId = requestId(req)
 	if h.RequestId == "" {
 		h.RequestId = ksuid.Generate().String()
 	}
+	h.Log.Data["request_id"] = h.RequestId
 
 	h.Query = req.URL.Query()
 
@@ -195,8 +197,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	defer func() {
 		if value := recover(); value != nil {
-			h.handlePanic(value)
-			h.ReplyInternalError(500, "internal error")
+			msg := h.handlePanic(value)
+			h.ReplyInternalError(500, "panic: %s", msg)
 		}
 	}()
 

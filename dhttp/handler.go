@@ -173,7 +173,7 @@ func (h *Handler) ReplyErrorData(status int, code string, data APIErrorData, for
 	h.Server.handleError(h, status, code, fmt.Sprintf(format, args...), data)
 }
 
-func (h *Handler) handlePanic(value interface{}) {
+func (h *Handler) handlePanic(value interface{}) string {
 	var msg string
 
 	switch v := value.(type) {
@@ -190,6 +190,8 @@ func (h *Handler) handlePanic(value interface{}) {
 	buf = buf[0 : n-1]
 
 	h.Log.Error("panic: %s\n%s", msg, string(buf))
+
+	return msg
 }
 
 func (h *Handler) logRequest() {
@@ -220,8 +222,6 @@ func (h *Handler) logRequest() {
 	}
 
 	data := log.Data{
-		"address":       h.ClientAddress,
-		"request_id":    h.RequestId,
 		"time":          reqTime.Microseconds(),
 		"response_size": w.ResponseBodySize,
 	}
