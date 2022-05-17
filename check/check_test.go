@@ -144,4 +144,50 @@ func TestCheckTest(t *testing.T) {
 	if assert.Equal(1, len(c.Errors)) {
 		assert.Equal(jsonpointer.Pointer{"t", "a"}, c.Errors[0].Pointer)
 	}
+
+	// Object arrays
+	c = NewChecker()
+	objArray1 := []*testObj2{
+		&testObj2{C: 1},
+		&testObj2{C: 2},
+		&testObj2{C: 3},
+	}
+	assert.True(c.CheckObjectArray("t", objArray1))
+
+	c = NewChecker()
+	objArray2 := []*testObj2{
+		&testObj2{C: 1},
+		&testObj2{C: 2},
+		&testObj2{C: 0},
+		&testObj2{C: 3},
+		&testObj2{C: 0},
+	}
+	assert.False(c.CheckObjectArray("t", objArray2))
+	if assert.Equal(2, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t", "2", "c"}, c.Errors[0].Pointer)
+		assert.Equal(jsonpointer.Pointer{"t", "4", "c"}, c.Errors[1].Pointer)
+	}
+
+	// Object maps
+	c = NewChecker()
+	objMap1 := map[string]*testObj2{
+		"v1": &testObj2{C: 1},
+		"v2": &testObj2{C: 2},
+		"v3": &testObj2{C: 3},
+	}
+	assert.True(c.CheckObjectMap("t", objMap1))
+
+	c = NewChecker()
+	objMap2 := map[string]*testObj2{
+		"v1": &testObj2{C: 1},
+		"v2": &testObj2{C: 2},
+		"v3": &testObj2{C: 0},
+		"v4": &testObj2{C: 3},
+		"v5": &testObj2{C: 0},
+	}
+	assert.False(c.CheckObjectMap("t", objMap2))
+	if assert.Equal(2, len(c.Errors)) {
+		assert.Equal(jsonpointer.Pointer{"t", "v3", "c"}, c.Errors[0].Pointer)
+		assert.Equal(jsonpointer.Pointer{"t", "v5", "c"}, c.Errors[1].Pointer)
+	}
 }

@@ -295,13 +295,69 @@ func (c *Checker) CheckObject(token string, value interface{}) bool {
 func (c *Checker) doCheckObject(token string, value interface{}) bool {
 	nbErrors := len(c.Errors)
 
-	if obj, ok := value.(Object); ok {
-		c.WithChild(token, func() {
-			obj.Check(c)
-		})
+	obj, ok := value.(Object)
+	if !ok {
+		panicf("value %#v (%T) does not implement Object", value, value)
 	}
 
+	c.WithChild(token, func() {
+		obj.Check(c)
+	})
+
 	return len(c.Errors) == nbErrors
+}
+
+func (c *Checker) CheckObjectArray(token string, value interface{}) bool {
+	valueType := reflect.TypeOf(value)
+	kind := valueType.Kind()
+
+	if kind != reflect.Array && kind != reflect.Slice {
+		panicf("value %#v (%T) is not an array or slice", value, value)
+	}
+
+	ok := true
+
+	c.WithChild(token, func() {
+		values := reflect.ValueOf(value)
+
+		for i := 0; i < values.Len(); i++ {
+			child := values.Index(i).Interface()
+			childOk := c.CheckObject(strconv.Itoa(i), child)
+			ok = ok && childOk
+		}
+	})
+
+	return ok
+}
+
+func (c *Checker) CheckObjectMap(token string, value interface{}) bool {
+	valueType := reflect.TypeOf(value)
+	if valueType.Kind() != reflect.Map {
+		panicf("value %#v (%T) is not a map", value, value)
+	}
+
+	ok := true
+
+	c.WithChild(token, func() {
+		values := reflect.ValueOf(value)
+
+		iter := values.MapRange()
+		for iter.Next() {
+			key := iter.Key()
+			if key.Kind() != reflect.String {
+				panicf("value %#v (%T) is a map whose keys are not strings",
+					value, value)
+			}
+			keyString := key.Interface().(string)
+
+			value := iter.Value().Interface()
+
+			valueOk := c.CheckObject(keyString, value)
+			ok = ok && valueOk
+		}
+	})
+
+	return ok
 }
 
 func checkObject(value interface{}, pnil *bool) {
