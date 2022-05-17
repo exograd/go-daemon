@@ -362,6 +362,11 @@ func (c *Checker) CheckObjectMap(token string, value interface{}) bool {
 
 func checkObject(value interface{}, pnil *bool) {
 	valueType := reflect.TypeOf(value)
+	if valueType == nil {
+		*pnil = true
+		return
+	}
+
 	if valueType.Kind() != reflect.Pointer {
 		panicf("value %#v (%T) is not a pointer", value, value)
 	}
