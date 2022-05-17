@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,10 @@ var (
 func init() {
 	tokenEncoder = strings.NewReplacer("~", "~0", "/", "~1")
 	tokenDecoder = strings.NewReplacer("~1", "/", "~0", "~")
+}
+
+func NewPointer(tokens ...string) Pointer {
+	return Pointer(tokens)
 }
 
 func (p *Pointer) Parse(s string) error {
@@ -69,6 +74,39 @@ func (p *Pointer) UnmarshalJSON(data []byte) error {
 
 func (p *Pointer) Append(token string) {
 	*p = append(*p, token)
+}
+
+func (p Pointer) Find(value interface{}) interface{} {
+	v := value
+
+	for _, token := range p {
+		switch tv := v.(type) {
+		case []interface{}:
+			i, err := strconv.ParseInt(token, 10, 64)
+			if err != nil {
+				return nil
+			}
+
+			if i < 0 || i >= int64(len(tv)) {
+				return nil
+			}
+
+			v = tv[i]
+
+		case map[string]interface{}:
+			child, found := tv[token]
+			if !found {
+				return nil
+			}
+
+			v = child
+
+		default:
+			return nil
+		}
+	}
+
+	return v
 }
 
 func encodeToken(s string) string {

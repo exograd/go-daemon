@@ -38,3 +38,58 @@ func TestPointerString(t *testing.T) {
 	assert.Equal("/foo~1bar/~0hello", Pointer{"foo/bar", "~hello"}.String())
 	assert.Equal("/~01/~10", Pointer{"~1", "/0"}.String())
 }
+
+func TestPointerFind(t *testing.T) {
+	assert := assert.New(t)
+
+	obj := map[string]interface{}{
+		"a": 42,
+		"b": map[string]interface{}{
+			"x": 1,
+		},
+		"c": []interface{}{
+			map[string]interface{}{
+				"x": 2,
+			},
+			map[string]interface{}{
+				"x": 3,
+			},
+		},
+	}
+
+	assert.Equal(obj,
+		NewPointer().Find(obj))
+
+	assert.Equal(nil,
+		NewPointer("foo").Find(obj))
+
+	assert.Equal(42,
+		NewPointer("a").Find(obj))
+
+	assert.Equal(map[string]interface{}{"x": 1},
+		NewPointer("b").Find(obj))
+
+	assert.Equal(nil,
+		NewPointer("c", "foo").Find(obj))
+
+	assert.Equal(nil,
+		NewPointer("c", "-2").Find(obj))
+
+	assert.Equal(nil,
+		NewPointer("c", "3").Find(obj))
+
+	assert.Equal(map[string]interface{}{"x": 2},
+		NewPointer("c", "0").Find(obj))
+
+	assert.Equal(2,
+		NewPointer("c", "0", "x").Find(obj))
+
+	assert.Equal(3,
+		NewPointer("c", "1", "x").Find(obj))
+
+	assert.Equal(nil,
+		NewPointer("c", "1", "y").Find(obj))
+
+	assert.Equal(nil,
+		NewPointer("c", "1", "x", "2").Find(obj))
+}
