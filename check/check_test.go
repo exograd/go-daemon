@@ -2,6 +2,7 @@ package check
 
 import (
 	"regexp"
+	"sort"
 	"testing"
 
 	"github.com/exograd/go-daemon/jsonpointer"
@@ -187,6 +188,10 @@ func TestCheckTest(t *testing.T) {
 	}
 	assert.False(c.CheckObjectMap("t", objMap2))
 	if assert.Equal(2, len(c.Errors)) {
+		sort.Slice(c.Errors, func(i, j int) bool {
+			return c.Errors[i].Pointer.String() < c.Errors[j].Pointer.String()
+		})
+
 		assert.Equal(jsonpointer.Pointer{"t", "v3", "c"}, c.Errors[0].Pointer)
 		assert.Equal(jsonpointer.Pointer{"t", "v5", "c"}, c.Errors[1].Pointer)
 	}
