@@ -170,7 +170,7 @@ func (c *Client) UpdateSchema(schema, dirPath string) error {
 	err := c.WithTx(func(conn Conn) error {
 		// Take a lock to make sure only one application tries to update the
 		// schema at the same time.
-		err := TakeAdvisorycLock(conn,
+		err := TakeAdvisoryLock(conn,
 			AdvisoryLockId1, AdvisoryLockId2Migrations)
 		if err != nil {
 			return fmt.Errorf("cannot take advisory lock: %w", err)
@@ -223,7 +223,7 @@ func (c *Client) UpdateSchema(schema, dirPath string) error {
 	return nil
 }
 
-func TakeAdvisorycLock(conn Conn, id1, id2 uint32) error {
+func TakeAdvisoryLock(conn Conn, id1, id2 uint32) error {
 	ctx := context.Background()
 
 	query := `SELECT pg_advisory_xact_lock($1, $2)`
