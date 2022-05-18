@@ -180,7 +180,7 @@ func (c *Checker) CheckStringValue(token interface{}, value interface{}, values 
 	}
 
 	if !found {
-		c.AddError(token, "%s", buf.String())
+		c.AddError(token, "invalid_value", "%s", buf.String())
 	}
 
 	return found
