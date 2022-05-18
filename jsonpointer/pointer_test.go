@@ -39,6 +39,22 @@ func TestPointerString(t *testing.T) {
 	assert.Equal("/~01/~10", Pointer{"~1", "/0"}.String())
 }
 
+func TestPointerParent(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.Equal("", Pointer{"a"}.Parent().String())
+	assert.Equal("/a", Pointer{"a", "b"}.Parent().String())
+	assert.Equal("/a/b", Pointer{"a", "b", "c"}.Parent().String())
+}
+
+func TestPointerChild(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.Equal("/a", Pointer{}.Child("a").String())
+	assert.Equal("/a/b/c", Pointer{"a"}.Child("b", "c").String())
+	assert.Equal("/a/b/c", Pointer{"a", "b"}.Child("c").String())
+}
+
 func TestPointerFind(t *testing.T) {
 	assert := assert.New(t)
 

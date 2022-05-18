@@ -76,6 +76,19 @@ func (p *Pointer) Append(token string) {
 	*p = append(*p, token)
 }
 
+func (p Pointer) Parent() Pointer {
+	if len(p) == 0 {
+		panic("empty pointer")
+	}
+
+	return append(Pointer{}, p[:len(p)-1]...)
+}
+
+func (p Pointer) Child(tokens ...string) Pointer {
+	p2 := append(Pointer{}, p...)
+	return append(p2, tokens...)
+}
+
 func (p Pointer) Find(value interface{}) interface{} {
 	v := value
 
