@@ -62,33 +62,25 @@ func (c *Checker) Error() error {
 	return c.Errors
 }
 
-func (c *Checker) Push(token string) {
-	c.Pointer = append(c.Pointer, token)
+func (c *Checker) Push(token interface{}) {
+	c.Pointer = pointerAppend(c.Pointer, token)
 }
 
 func (c *Checker) Pop() {
 	c.Pointer = c.Pointer[:len(c.Pointer)-1]
 }
 
-func (c *Checker) WithChild(tokenOrIndex interface{}, fn func()) {
-	var token string
-	switch v := tokenOrIndex.(type) {
-	case string:
-		token = v
-	case int:
-		token = strconv.Itoa(v)
-	}
-
+func (c *Checker) WithChild(token interface{}, fn func()) {
 	c.Push(token)
 	defer c.Pop()
 
 	fn()
 }
 
-func (c *Checker) AddError(token string, code, format string, args ...interface{}) {
+func (c *Checker) AddError(token interface{}, code, format string, args ...interface{}) {
 	var pointer jsonpointer.Pointer
 	pointer = append(pointer, c.Pointer...)
-	pointer.Append(token)
+	pointer = pointerAppend(pointer, token)
 
 	err := ValidationError{
 		Pointer: pointer,
@@ -99,7 +91,7 @@ func (c *Checker) AddError(token string, code, format string, args ...interface{
 	c.Errors = append(c.Errors, &err)
 }
 
-func (c *Checker) Check(token string, v bool, code, format string, args ...interface{}) bool {
+func (c *Checker) Check(token interface{}, v bool, code, format string, args ...interface{}) bool {
 	if !v {
 		c.AddError(token, code, format, args...)
 	}
@@ -107,17 +99,17 @@ func (c *Checker) Check(token string, v bool, code, format string, args ...inter
 	return v
 }
 
-func (c *Checker) CheckIntMin(token string, i, min int) bool {
+func (c *Checker) CheckIntMin(token interface{}, i, min int) bool {
 	return c.Check(token, i >= min, "integer_too_small",
 		"integer %d must be greater or equal to %d", i, min)
 }
 
-func (c *Checker) CheckIntMax(token string, i, max int) bool {
+func (c *Checker) CheckIntMax(token interface{}, i, max int) bool {
 	return c.Check(token, i <= max, "integer_too_large",
 		"integer %d must be lower or equal to %d", i, max)
 }
 
-func (c *Checker) CheckIntMinMax(token string, i, min, max int) bool {
+func (c *Checker) CheckIntMinMax(token interface{}, i, min, max int) bool {
 	if !c.CheckIntMin(token, i, min) {
 		return false
 	}
@@ -125,17 +117,17 @@ func (c *Checker) CheckIntMinMax(token string, i, min, max int) bool {
 	return c.CheckIntMax(token, i, max)
 }
 
-func (c *Checker) CheckStringLengthMin(token string, s string, min int) bool {
+func (c *Checker) CheckStringLengthMin(token interface{}, s string, min int) bool {
 	return c.Check(token, len(s) >= min, "string_too_small",
 		"string length must be greater or equal to %d", min)
 }
 
-func (c *Checker) CheckStringLengthMax(token string, s string, max int) bool {
+func (c *Checker) CheckStringLengthMax(token interface{}, s string, max int) bool {
 	return c.Check(token, len(s) <= max, "string_too_large",
 		"string length must be lower or equal to %d", max)
 }
 
-func (c *Checker) CheckStringLengthMinMax(token string, s string, min, max int) bool {
+func (c *Checker) CheckStringLengthMinMax(token interface{}, s string, min, max int) bool {
 	if !c.CheckStringLengthMin(token, s, min) {
 		return false
 	}
@@ -143,12 +135,12 @@ func (c *Checker) CheckStringLengthMinMax(token string, s string, min, max int) 
 	return c.CheckStringLengthMax(token, s, max)
 }
 
-func (c *Checker) CheckStringNotEmpty(token string, s string) bool {
+func (c *Checker) CheckStringNotEmpty(token interface{}, s string) bool {
 	return c.Check(token, s != "", "empty_string",
 		"string must not be empty")
 }
 
-func (c *Checker) CheckStringValue(token string, value interface{}, values interface{}) bool {
+func (c *Checker) CheckStringValue(token interface{}, value interface{}, values interface{}) bool {
 	valueType := reflect.TypeOf(value)
 	if valueType.Kind() != reflect.String {
 		panicf("value %#v (%T) is not a string", value, value)
@@ -194,13 +186,13 @@ func (c *Checker) CheckStringValue(token string, value interface{}, values inter
 	return found
 }
 
-func (c *Checker) CheckStringMatch(token string, s string, re *regexp.Regexp) bool {
+func (c *Checker) CheckStringMatch(token interface{}, s string, re *regexp.Regexp) bool {
 	return c.CheckStringMatch2(token, s, re, "invalid_string_format",
 		"string must match the following regular expression: %s",
 		re.String())
 }
 
-func (c *Checker) CheckStringMatch2(token string, s string, re *regexp.Regexp, code, format string, args ...interface{}) bool {
+func (c *Checker) CheckStringMatch2(token interface{}, s string, re *regexp.Regexp, code, format string, args ...interface{}) bool {
 	if !re.MatchString(s) {
 		c.AddError(token, code, format, args...)
 		return false
@@ -209,7 +201,7 @@ func (c *Checker) CheckStringMatch2(token string, s string, re *regexp.Regexp, c
 	return true
 }
 
-func (c *Checker) CheckStringURI(token string, s string) bool {
+func (c *Checker) CheckStringURI(token interface{}, s string) bool {
 	// The url.Parse function considers that the empty string is a valid URL.
 	// It is not.
 
@@ -224,7 +216,7 @@ func (c *Checker) CheckStringURI(token string, s string) bool {
 	return true
 }
 
-func (c *Checker) CheckArrayLengthMin(token string, value interface{}, min int) bool {
+func (c *Checker) CheckArrayLengthMin(token interface{}, value interface{}, min int) bool {
 	var length int
 
 	checkArray(value, &length)
@@ -233,7 +225,7 @@ func (c *Checker) CheckArrayLengthMin(token string, value interface{}, min int) 
 		"array must contain %d or more elements", min)
 }
 
-func (c *Checker) CheckArrayLengthMax(token string, value interface{}, max int) bool {
+func (c *Checker) CheckArrayLengthMax(token interface{}, value interface{}, max int) bool {
 	var length int
 
 	checkArray(value, &length)
@@ -242,7 +234,7 @@ func (c *Checker) CheckArrayLengthMax(token string, value interface{}, max int) 
 		"array must contain %d or less elements", max)
 }
 
-func (c *Checker) CheckArrayLengthMinMax(token string, value interface{}, min, max int) bool {
+func (c *Checker) CheckArrayLengthMinMax(token interface{}, value interface{}, min, max int) bool {
 	if !c.CheckArrayLengthMin(token, value, min) {
 		return false
 	}
@@ -250,7 +242,7 @@ func (c *Checker) CheckArrayLengthMinMax(token string, value interface{}, min, m
 	return c.CheckArrayLengthMax(token, value, max)
 }
 
-func (c *Checker) CheckArrayNotEmpty(token string, value interface{}) bool {
+func (c *Checker) CheckArrayNotEmpty(token interface{}, value interface{}) bool {
 	var length int
 
 	checkArray(value, &length)
@@ -273,7 +265,7 @@ func checkArray(value interface{}, plen *int) {
 	}
 }
 
-func (c *Checker) CheckOptionalObject(token string, value interface{}) bool {
+func (c *Checker) CheckOptionalObject(token interface{}, value interface{}) bool {
 	var isNil bool
 	checkObject(value, &isNil)
 
@@ -284,7 +276,7 @@ func (c *Checker) CheckOptionalObject(token string, value interface{}) bool {
 	return c.doCheckObject(token, value)
 }
 
-func (c *Checker) CheckObject(token string, value interface{}) bool {
+func (c *Checker) CheckObject(token interface{}, value interface{}) bool {
 	var isNil bool
 	checkObject(value, &isNil)
 
@@ -295,7 +287,7 @@ func (c *Checker) CheckObject(token string, value interface{}) bool {
 	return c.doCheckObject(token, value)
 }
 
-func (c *Checker) doCheckObject(token string, value interface{}) bool {
+func (c *Checker) doCheckObject(token interface{}, value interface{}) bool {
 	nbErrors := len(c.Errors)
 
 	obj, ok := value.(Object)
@@ -310,7 +302,7 @@ func (c *Checker) doCheckObject(token string, value interface{}) bool {
 	return len(c.Errors) == nbErrors
 }
 
-func (c *Checker) CheckObjectArray(token string, value interface{}) bool {
+func (c *Checker) CheckObjectArray(token interface{}, value interface{}) bool {
 	valueType := reflect.TypeOf(value)
 	kind := valueType.Kind()
 
@@ -333,7 +325,7 @@ func (c *Checker) CheckObjectArray(token string, value interface{}) bool {
 	return ok
 }
 
-func (c *Checker) CheckObjectMap(token string, value interface{}) bool {
+func (c *Checker) CheckObjectMap(token interface{}, value interface{}) bool {
 	valueType := reflect.TypeOf(value)
 	if valueType.Kind() != reflect.Map {
 		panicf("value %#v (%T) is not a map", value, value)
@@ -380,6 +372,22 @@ func checkObject(value interface{}, pnil *bool) {
 	}
 
 	*pnil = reflect.ValueOf(value).IsZero()
+}
+
+func pointerAppend(p jsonpointer.Pointer, token interface{}) jsonpointer.Pointer {
+	switch v := token.(type) {
+	case string:
+		return append(p, v)
+
+	case int:
+		return append(p, strconv.Itoa(v))
+
+	case jsonpointer.Pointer:
+		return append(p, v...)
+	}
+
+	panicf("invalid token %#v (%T)", token, token)
+	return nil // the Go compiler cannot infer that panic() never returns...
 }
 
 func panicf(format string, args ...interface{}) {
