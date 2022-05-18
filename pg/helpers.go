@@ -55,7 +55,7 @@ func QueryObjects(conn Conn, objs Objects, query string, args ...interface{}) er
 }
 
 func QueryObjectsContext(ctx context.Context, conn Conn, objs Objects, query string, args ...interface{}) error {
-	rows, err := conn.Query(ctx, query)
+	rows, err := conn.Query(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("cannot execute query: %w", err)
 	}
