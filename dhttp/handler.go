@@ -104,17 +104,20 @@ func (h *Handler) JSONRequestObject(obj check.Object) error {
 
 	obj.Check(checker)
 	if err := checker.Error(); err != nil {
-		data := map[string]interface{}{
-			"validation_errors": checker.Errors,
-		}
-
-		h.ReplyErrorData(400, "invalid_request_body", data,
-			"invalid request body:\n%v", err)
-
+		h.ReplyRequestBodyValidationErrors(checker.Errors)
 		return fmt.Errorf("invalid request body: %w", err)
 	}
 
 	return nil
+}
+
+func (h *Handler) ReplyRequestBodyValidationErrors(err check.ValidationErrors) {
+	data := map[string]interface{}{
+		"validation_errors": err,
+	}
+
+	h.ReplyErrorData(400, "invalid_request_body", data,
+		"invalid request body:\n%v", err)
 }
 
 func (h *Handler) Reply(status int, r io.Reader) {
