@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/exograd/go-daemon/jsonpointer"
+	"github.com/exograd/go-daemon/djson"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +48,7 @@ func TestCheckTest(t *testing.T) {
 	assert.True(c.CheckIntMinMax("t", 42, 1, 100))
 	assert.False(c.CheckIntMinMax("t", 42, 100, 120))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	// Strings
@@ -58,14 +58,14 @@ func TestCheckTest(t *testing.T) {
 	assert.True(c.CheckStringLengthMinMax("t", "foo", 1, 10))
 	assert.False(c.CheckStringLengthMinMax("t", "foo", 5, 10))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	c = NewChecker()
 	assert.True(c.CheckStringValue("t", "x", []string{"x", "y", "z"}))
 	assert.False(c.CheckStringValue("t", "w", []string{"x", "y", "z"}))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	c = NewChecker()
@@ -73,14 +73,14 @@ func TestCheckTest(t *testing.T) {
 	assert.True(c.CheckStringMatch("t", "x1", re))
 	assert.False(c.CheckStringMatch("t", "y1", re))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	c = NewChecker()
 	assert.True(c.CheckStringURI("t", "http://example.com"))
 	assert.False(c.CheckStringURI("t", ""))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	// String types
@@ -88,7 +88,7 @@ func TestCheckTest(t *testing.T) {
 	assert.True(c.CheckStringValue("t", testEnumFoo, testEnumValues))
 	assert.False(c.CheckStringValue("t", "unknown", testEnumValues))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	// Slices
@@ -98,7 +98,7 @@ func TestCheckTest(t *testing.T) {
 	assert.True(c.CheckArrayLengthMinMax("t", []int{1, 2, 3}, 1, 10))
 	assert.False(c.CheckArrayLengthMinMax("t", []int{1, 2, 3}, 5, 10))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	// Arrays
@@ -108,7 +108,7 @@ func TestCheckTest(t *testing.T) {
 	assert.True(c.CheckArrayLengthMinMax("t", [3]int{1, 2, 3}, 1, 10))
 	assert.False(c.CheckArrayLengthMinMax("t", [3]int{1, 2, 3}, 5, 10))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t"}, c.Errors[0].Pointer)
 	}
 
 	// Objects
@@ -126,7 +126,7 @@ func TestCheckTest(t *testing.T) {
 	}
 	assert.False(c.CheckObject("t", obj2))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t", "b", "c"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t", "b", "c"}, c.Errors[0].Pointer)
 	}
 
 	c = NewChecker()
@@ -143,7 +143,7 @@ func TestCheckTest(t *testing.T) {
 	}
 	assert.False(c.CheckObject("t", obj4))
 	if assert.Equal(1, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t", "a"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t", "a"}, c.Errors[0].Pointer)
 	}
 
 	// Object arrays
@@ -165,8 +165,8 @@ func TestCheckTest(t *testing.T) {
 	}
 	assert.False(c.CheckObjectArray("t", objArray2))
 	if assert.Equal(2, len(c.Errors)) {
-		assert.Equal(jsonpointer.Pointer{"t", "2", "c"}, c.Errors[0].Pointer)
-		assert.Equal(jsonpointer.Pointer{"t", "4", "c"}, c.Errors[1].Pointer)
+		assert.Equal(djson.Pointer{"t", "2", "c"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t", "4", "c"}, c.Errors[1].Pointer)
 	}
 
 	// Object maps
@@ -192,7 +192,7 @@ func TestCheckTest(t *testing.T) {
 			return c.Errors[i].Pointer.String() < c.Errors[j].Pointer.String()
 		})
 
-		assert.Equal(jsonpointer.Pointer{"t", "v3", "c"}, c.Errors[0].Pointer)
-		assert.Equal(jsonpointer.Pointer{"t", "v5", "c"}, c.Errors[1].Pointer)
+		assert.Equal(djson.Pointer{"t", "v3", "c"}, c.Errors[0].Pointer)
+		assert.Equal(djson.Pointer{"t", "v5", "c"}, c.Errors[1].Pointer)
 	}
 }

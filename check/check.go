@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/exograd/go-daemon/jsonpointer"
+	"github.com/exograd/go-daemon/djson"
 )
 
 type Checker struct {
-	Pointer jsonpointer.Pointer
+	Pointer djson.Pointer
 	Errors  ValidationErrors
 }
 
@@ -21,9 +21,9 @@ type Object interface {
 }
 
 type ValidationError struct {
-	Pointer jsonpointer.Pointer `json:"pointer"`
-	Code    string              `json:"code"`
-	Message string              `json:"message"`
+	Pointer djson.Pointer `json:"pointer"`
+	Code    string        `json:"code"`
+	Message string        `json:"message"`
 }
 
 type ValidationErrors []*ValidationError
@@ -78,7 +78,7 @@ func (c *Checker) WithChild(token interface{}, fn func()) {
 }
 
 func (c *Checker) AddError(token interface{}, code, format string, args ...interface{}) {
-	var pointer jsonpointer.Pointer
+	var pointer djson.Pointer
 	pointer = append(pointer, c.Pointer...)
 	pointer = pointerAppend(pointer, token)
 
@@ -374,7 +374,7 @@ func checkObject(value interface{}, pnil *bool) {
 	*pnil = reflect.ValueOf(value).IsZero()
 }
 
-func pointerAppend(p jsonpointer.Pointer, token interface{}) jsonpointer.Pointer {
+func pointerAppend(p djson.Pointer, token interface{}) djson.Pointer {
 	switch v := token.(type) {
 	case string:
 		return append(p, v)
@@ -382,7 +382,7 @@ func pointerAppend(p jsonpointer.Pointer, token interface{}) jsonpointer.Pointer
 	case int:
 		return append(p, strconv.Itoa(v))
 
-	case jsonpointer.Pointer:
+	case djson.Pointer:
 		return append(p, v...)
 	}
 

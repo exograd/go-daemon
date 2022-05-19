@@ -1,4 +1,4 @@
-package jsonpointer
+package djson
 
 import (
 	"testing"
