@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -46,6 +47,12 @@ func (p *Pointer) Parse(s string) error {
 	*p = Pointer(tokens)
 
 	return nil
+}
+
+func (p *Pointer) MustParse(s string) {
+	if err := p.Parse(s); err != nil {
+		panic(fmt.Errorf("cannot parse json pointer %q: %w", s, err))
+	}
 }
 
 func (p Pointer) String() string {
