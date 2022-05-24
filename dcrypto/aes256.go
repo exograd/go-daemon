@@ -110,6 +110,10 @@ func DecryptAES256(inputData []byte, key AES256Key) ([]byte, error) {
 	iv := inputData[:AES256IVSize]
 	paddedData := inputData[AES256IVSize:]
 
+	if len(paddedData)%aes.BlockSize != 0 {
+		return nil, fmt.Errorf("invalid padded data length")
+	}
+
 	decrypter := cipher.NewCBCDecrypter(blockCipher, iv)
 	decrypter.CryptBlocks(paddedData, paddedData)
 
