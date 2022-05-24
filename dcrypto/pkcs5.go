@@ -33,10 +33,14 @@ func UnpadPKCS5(data []byte, blockSize int) ([]byte, error) {
 		return nil, fmt.Errorf("truncated data")
 	}
 
-	paddingSize := int(data[dataSize-1])
-	if paddingSize > dataSize || paddingSize > blockSize {
-		return nil, fmt.Errorf("invalid padding size %d", paddingSize)
-	}
+	if len(data) == 0 {
+		return data, nil
+	} else {
+		paddingSize := int(data[dataSize-1])
+		if paddingSize > dataSize || paddingSize > blockSize {
+			return nil, fmt.Errorf("invalid padding size %d", paddingSize)
+		}
 
-	return data[:dataSize-paddingSize], nil
+		return data[:dataSize-paddingSize], nil
+	}
 }
