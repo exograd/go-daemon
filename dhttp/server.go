@@ -138,7 +138,7 @@ func (s *Server) Start() error {
 
 func (s *Server) Stop() {
 	close(s.stopChan)
-	s.wg.Done()
+	s.wg.Wait()
 }
 
 func (s *Server) Terminate() {
