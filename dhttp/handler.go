@@ -56,6 +56,8 @@ type Handler struct {
 	ResponseWriter http.ResponseWriter
 
 	StartTime time.Time
+
+	errorCode string
 }
 
 func (h *Handler) RouteVariable(name string) string {
@@ -169,6 +171,7 @@ func (h *Handler) ReplyNotImplemented(feature string) {
 }
 
 func (h *Handler) ReplyError(status int, code, format string, args ...interface{}) {
+	h.errorCode = code
 	h.Server.handleError(h, status, code, fmt.Sprintf(format, args...), nil)
 }
 
@@ -233,6 +236,10 @@ func (h *Handler) logRequest() {
 	if w.Status != 0 {
 		statusString = strconv.Itoa(w.Status)
 		data["status"] = w.Status
+	}
+
+	if h.errorCode != "" {
+		data["error"] = h.errorCode
 	}
 
 	h.Log.InfoData(data, "%s %s %s %s %s",
