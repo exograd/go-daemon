@@ -47,6 +47,8 @@ type ServerCfg struct {
 	Address string `json:"address"`
 
 	TLS *TLSServerCfg `json:"tls,omitempty"`
+
+	HideInternalErrors bool `json:"hide_internal_errors"`
 }
 
 type TLSServerCfg struct {

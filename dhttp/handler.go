@@ -162,8 +162,13 @@ func (h *Handler) ReplyJSON(status int, value interface{}) {
 }
 
 func (h *Handler) ReplyInternalError(status int, format string, args ...interface{}) {
-	h.Log.Error("internal error: "+format, args...)
-	h.ReplyError(status, "internal_error", "internal error")
+	msg := fmt.Sprintf(format, args...)
+	h.Log.Error("internal error: %s", msg)
+
+	if h.Server.Cfg.HideInternalErrors {
+		msg = "internal error"
+	}
+	h.ReplyError(status, "internal_error", msg)
 }
 
 func (h *Handler) ReplyNotImplemented(feature string) {
