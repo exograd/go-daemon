@@ -68,6 +68,14 @@ func (id *KSUID) Parse(s string) error {
 	return nil
 }
 
+func (id *KSUID) ValueOrZero() KSUID {
+	if id == nil {
+		return Zero
+	}
+
+	return *id
+}
+
 func (id KSUID) String() string {
 	return Base62Encode(id[:])
 }
