@@ -161,6 +161,22 @@ func (h *Handler) ReplyJSON(status int, value interface{}) {
 	h.Reply(status, &buf)
 }
 
+func (h *Handler) ReplyCompactJSON(status int, value interface{}) {
+	header := h.ResponseWriter.Header()
+	header.Set("Content-Type", "application/json")
+
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+
+	if err := encoder.Encode(value); err != nil {
+		h.Log.Error("cannot encode json response: %v", err)
+		h.ResponseWriter.WriteHeader(500)
+		return
+	}
+
+	h.Reply(status, &buf)
+}
+
 func (h *Handler) ReplyInternalError(status int, format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
 	h.Log.Error("internal error: %s", msg)
