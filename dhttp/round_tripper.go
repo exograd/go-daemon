@@ -43,6 +43,8 @@ func NewRoundTripper(rt http.RoundTripper, cfg *ClientCfg) *RoundTripper {
 func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	start := time.Now()
 
+	rt.finalizeReq(req)
+
 	res, err := rt.RoundTripper.RoundTrip(req)
 
 	if err == nil && rt.Cfg.LogRequests {
@@ -50,6 +52,14 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	return res, err
+}
+
+func (rt *RoundTripper) finalizeReq(req *http.Request) {
+	for name, values := range rt.Cfg.Header {
+		for _, value := range values {
+			req.Header.Add(name, value)
+		}
+	}
 }
 
 func (rt *RoundTripper) logRequest(req *http.Request, res *http.Response, seconds float64) {

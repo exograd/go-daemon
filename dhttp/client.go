@@ -36,6 +36,8 @@ type ClientCfg struct {
 	LogRequests bool `json:"log_requests"`
 
 	TLS *TLSClientCfg `json:"tls"`
+
+	Header http.Header `json:"-"`
 }
 
 type TLSClientCfg struct {
