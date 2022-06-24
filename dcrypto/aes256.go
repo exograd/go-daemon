@@ -15,6 +15,7 @@
 package dcrypto
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -29,6 +30,16 @@ type AES256Key [32]byte
 const (
 	AES256IVSize int = aes.BlockSize
 )
+
+var Zero = AES256Key{}
+
+func (key AES256Key) Bytes() []byte {
+	return key[:]
+}
+
+func (key AES256Key) IsZero() bool {
+	return bytes.Equal(key.Bytes(), Zero.Bytes())
+}
 
 func (key AES256Key) Hex() string {
 	return hex.EncodeToString(key[:])
