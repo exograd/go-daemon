@@ -117,6 +117,24 @@ func (c *Checker) CheckIntMinMax(token interface{}, i, min, max int) bool {
 	return c.CheckIntMax(token, i, max)
 }
 
+func (c *Checker) CheckFloatMin(token interface{}, i, min float64) bool {
+	return c.Check(token, i >= min, "float_too_small",
+		"float %f must be greater or equal to %f", i, min)
+}
+
+func (c *Checker) CheckFloatMax(token interface{}, i, max float64) bool {
+	return c.Check(token, i <= max, "float_too_large",
+		"float %f must be lower or equal to %f", i, max)
+}
+
+func (c *Checker) CheckFloatMinMax(token interface{}, i, min, max float64) bool {
+	if !c.CheckFloatMin(token, i, min) {
+		return false
+	}
+
+	return c.CheckFloatMax(token, i, max)
+}
+
 func (c *Checker) CheckStringLengthMin(token interface{}, s string, min int) bool {
 	return c.Check(token, len(s) >= min, "string_too_small",
 		"string length must be greater or equal to %d", min)
