@@ -60,6 +60,21 @@ func (key *AES256Key) FromHex(s string) error {
 	return nil
 }
 
+func (key *AES256Key) FromBase64(s string) error {
+	data, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return err
+	}
+
+	if len(data) != 32 {
+		return fmt.Errorf("invalid key size")
+	}
+
+	copy((*key)[:], data[:32])
+
+	return nil
+}
+
 func (key AES256Key) MarshalJSON() ([]byte, error) {
 	s := base64.StdEncoding.EncodeToString(key[:])
 	return json.Marshal(s)
