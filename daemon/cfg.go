@@ -20,9 +20,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"text/template"
 
 	"gopkg.in/yaml.v3"
 )
+
+var TemplateFuncMap = map[string]interface{}{
+	"env": func(name string) string {
+		return os.Getenv(name)
+	},
+}
 
 func LoadCfg(filePath string, dest interface{}) error {
 	data, err := ioutil.ReadFile(filePath)
@@ -30,7 +38,12 @@ func LoadCfg(filePath string, dest interface{}) error {
 		return fmt.Errorf("cannot read %s: %w", filePath, err)
 	}
 
-	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	data2, err := RenderCfg(data)
+	if err != nil {
+		return fmt.Errorf("cannot render %s: %w", filePath, err)
+	}
+
+	decoder := yaml.NewDecoder(bytes.NewReader(data2))
 
 	var yamlValue interface{}
 	if err := decoder.Decode(&yamlValue); err != nil && err != io.EOF {
@@ -52,4 +65,24 @@ func LoadCfg(filePath string, dest interface{}) error {
 	}
 
 	return nil
+}
+
+func RenderCfg(data []byte) ([]byte, error) {
+	tpl := template.New("")
+	tpl = tpl.Option("missingkey=error")
+	tpl = tpl.Funcs(TemplateFuncMap)
+
+	if _, err := tpl.Parse(string(data)); err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+
+	templateData := struct{}{}
+
+	if err := tpl.Execute(&buf, templateData); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
