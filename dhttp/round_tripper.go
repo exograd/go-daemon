@@ -21,12 +21,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/exograd/go-log"
+	"github.com/exograd/go-daemon/dlog"
 )
 
 type RoundTripper struct {
 	Cfg *ClientCfg
-	Log *log.Logger
+	Log *dlog.Logger
 
 	http.RoundTripper
 }

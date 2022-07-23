@@ -24,8 +24,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/exograd/go-daemon/dlog"
 	"github.com/exograd/go-daemon/ksuid"
-	"github.com/exograd/go-log"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -40,7 +40,7 @@ type RouteFunc func(*Handler)
 type ErrorHandler func(*Handler, int, string, string, APIErrorData)
 
 type ServerCfg struct {
-	Log *log.Logger `json:"-"`
+	Log *dlog.Logger `json:"-"`
 
 	ErrorHandler ErrorHandler `json:"-"`
 
@@ -58,7 +58,7 @@ type TLSServerCfg struct {
 
 type Server struct {
 	Cfg ServerCfg
-	Log *log.Logger
+	Log *dlog.Logger
 
 	server *http.Server
 	Router *chi.Mux
@@ -70,7 +70,7 @@ type Server struct {
 
 func NewServer(cfg ServerCfg) (*Server, error) {
 	if cfg.Log == nil {
-		cfg.Log = log.DefaultLogger("http-server")
+		cfg.Log = dlog.DefaultLogger("http-server")
 	}
 
 	if cfg.Address == "" {
@@ -92,7 +92,7 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 	s.server = &http.Server{
 		Addr:     cfg.Address,
 		Handler:  s,
-		ErrorLog: s.Log.StdLogger(log.LevelError),
+		ErrorLog: s.Log.StdLogger(dlog.LevelError),
 	}
 
 	if cfg.TLS != nil {

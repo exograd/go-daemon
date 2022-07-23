@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/exograd/go-log"
+	"github.com/exograd/go-daemon/dlog"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -32,7 +32,7 @@ const (
 )
 
 type ClientCfg struct {
-	Log *log.Logger `json:"-"`
+	Log *dlog.Logger `json:"-"`
 
 	URI string `json:"uri"`
 
@@ -42,14 +42,14 @@ type ClientCfg struct {
 
 type Client struct {
 	Cfg ClientCfg
-	Log *log.Logger
+	Log *dlog.Logger
 
 	Pool *pgxpool.Pool
 }
 
 func NewClient(cfg ClientCfg) (*Client, error) {
 	if cfg.Log == nil {
-		cfg.Log = log.DefaultLogger("pg")
+		cfg.Log = dlog.DefaultLogger("pg")
 	}
 
 	if cfg.URI == "" {

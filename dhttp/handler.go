@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/exograd/go-daemon/check"
-	"github.com/exograd/go-log"
+	"github.com/exograd/go-daemon/dlog"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -42,7 +42,7 @@ type APIErrorData map[string]interface{}
 
 type Handler struct {
 	Server *Server
-	Log    *log.Logger
+	Log    *dlog.Logger
 
 	ClientAddress string
 	RequestId     string
@@ -248,7 +248,7 @@ func (h *Handler) logRequest() {
 		resSizeString = fmt.Sprintf("%.1fGB", float64(w.ResponseBodySize)/1e9)
 	}
 
-	data := log.Data{
+	data := dlog.Data{
 		"time":          reqTime.Microseconds(),
 		"response_size": w.ResponseBodySize,
 	}

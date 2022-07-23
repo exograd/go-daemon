@@ -4,7 +4,7 @@ import (
 	"github.com/exograd/go-daemon/daemon"
 	"github.com/exograd/go-daemon/dhttp"
 	"github.com/exograd/go-daemon/influx"
-	"github.com/exograd/go-log"
+	"github.com/exograd/go-daemon/dlog"
 )
 
 type ServiceCfg struct {
@@ -14,7 +14,7 @@ type Service struct {
 	Cfg ServiceCfg
 
 	Daemon *daemon.Daemon
-	Log    *log.Logger
+	Log    *dlog.Logger
 }
 
 func NewService() *Service {

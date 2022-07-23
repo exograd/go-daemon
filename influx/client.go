@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/exograd/go-daemon/dhttp"
-	"github.com/exograd/go-log"
+	"github.com/exograd/go-daemon/dlog"
 )
 
 type ClientCfg struct {
-	Log        *log.Logger   `json:"-"`
+	Log        *dlog.Logger  `json:"-"`
 	HTTPClient *dhttp.Client `json:"-"`
 	Hostname   string        `json:"-"`
 
@@ -49,7 +49,7 @@ func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {
 
 type Client struct {
 	Cfg        ClientCfg
-	Log        *log.Logger
+	Log        *dlog.Logger
 	HTTPClient *dhttp.Client
 
 	uri  *url.URL
@@ -64,7 +64,7 @@ type Client struct {
 
 func NewClient(cfg ClientCfg) (*Client, error) {
 	if cfg.Log == nil {
-		cfg.Log = log.DefaultLogger("influx")
+		cfg.Log = dlog.DefaultLogger("influx")
 	}
 
 	if cfg.HTTPClient == nil {

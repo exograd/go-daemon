@@ -21,16 +21,16 @@ import (
 	"syscall"
 
 	"github.com/exograd/go-daemon/dhttp"
+	"github.com/exograd/go-daemon/dlog"
 	"github.com/exograd/go-daemon/influx"
 	"github.com/exograd/go-daemon/pg"
-	"github.com/exograd/go-log"
 	"github.com/exograd/go-program"
 )
 
 type DaemonCfg struct {
 	name string
 
-	Logger *log.LoggerCfg
+	Logger *dlog.LoggerCfg
 
 	HTTPServers map[string]dhttp.ServerCfg
 	HTTPClients map[string]dhttp.ClientCfg
@@ -66,7 +66,7 @@ func (cfg DaemonCfg) AddHTTPClient(name string, clientCfg dhttp.ClientCfg) {
 type Daemon struct {
 	Cfg DaemonCfg
 
-	Log *log.Logger
+	Log *dlog.Logger
 
 	service Service
 
@@ -123,7 +123,7 @@ func (d *Daemon) init() error {
 }
 
 func (d *Daemon) initDefaultLogger() {
-	d.Log = log.DefaultLogger(d.Cfg.name)
+	d.Log = dlog.DefaultLogger(d.Cfg.name)
 }
 
 func (d *Daemon) initHostname() error {
@@ -142,7 +142,7 @@ func (d *Daemon) initLogger() error {
 		return nil
 	}
 
-	logger, err := log.NewLogger(d.Cfg.name, *d.Cfg.Logger)
+	logger, err := dlog.NewLogger(d.Cfg.name, *d.Cfg.Logger)
 	if err != nil {
 		return fmt.Errorf("invalid logger configuration: %w", err)
 	}
@@ -160,7 +160,7 @@ func (d *Daemon) initHTTPServers() error {
 	d.HTTPServers = make(map[string]*dhttp.Server)
 
 	for name, cfg := range d.Cfg.HTTPServers {
-		cfg.Log = d.Log.Child("http-server", log.Data{"server": name})
+		cfg.Log = d.Log.Child("http-server", dlog.Data{"server": name})
 
 		server, err := dhttp.NewServer(cfg)
 		if err != nil {
@@ -194,7 +194,7 @@ func (d *Daemon) initHTTPClients() error {
 }
 
 func (d *Daemon) initHTTPClient(name string, cfg dhttp.ClientCfg) error {
-	cfg.Log = d.Log.Child("http-client", log.Data{"client": name})
+	cfg.Log = d.Log.Child("http-client", dlog.Data{"client": name})
 
 	client, err := dhttp.NewClient(cfg)
 	if err != nil {
@@ -217,7 +217,7 @@ func (d *Daemon) initInflux() error {
 
 	cfg := *d.Cfg.Influx
 
-	cfg.Log = d.Log.Child("influx", log.Data{})
+	cfg.Log = d.Log.Child("influx", dlog.Data{})
 	cfg.HTTPClient = d.HTTPClients["influx"]
 	cfg.Hostname = d.Hostname
 
@@ -238,7 +238,7 @@ func (d *Daemon) initPg() error {
 
 	cfg := *d.Cfg.Pg
 
-	cfg.Log = d.Log.Child("pg", log.Data{})
+	cfg.Log = d.Log.Child("pg", dlog.Data{})
 
 	client, err := pg.NewClient(cfg)
 	if err != nil {

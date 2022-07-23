@@ -27,11 +27,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/exograd/go-log"
+	"github.com/exograd/go-daemon/dlog"
 )
 
 type ClientCfg struct {
-	Log *log.Logger `json:"-"`
+	Log *dlog.Logger `json:"-"`
 
 	LogRequests bool `json:"log_requests"`
 
@@ -47,7 +47,7 @@ type TLSClientCfg struct {
 
 type Client struct {
 	Cfg ClientCfg
-	Log *log.Logger
+	Log *dlog.Logger
 
 	Client *http.Client
 
