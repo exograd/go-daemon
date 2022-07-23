@@ -32,6 +32,8 @@ type DaemonCfg struct {
 
 	Logger *dlog.LoggerCfg
 
+	API *APICfg
+
 	HTTPServers map[string]dhttp.ServerCfg
 	HTTPClients map[string]dhttp.ClientCfg
 
@@ -153,9 +155,16 @@ func (d *Daemon) initLogger() error {
 }
 
 func (d *Daemon) initHTTPServers() error {
-	d.Cfg.AddHTTPServer("daemon-api", dhttp.ServerCfg{
-		Address: DefaultAPIAddress,
-	})
+	if apiCfg := d.Cfg.API; apiCfg != nil {
+		address := apiCfg.Address
+		if address == "" {
+			address = DefaultAPIAddress
+		}
+
+		d.Cfg.AddHTTPServer("daemon-api", dhttp.ServerCfg{
+			Address: address,
+		})
+	}
 
 	d.HTTPServers = make(map[string]*dhttp.Server)
 

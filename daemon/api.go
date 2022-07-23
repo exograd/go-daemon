@@ -20,7 +20,15 @@ const (
 	DefaultAPIAddress = "localhost:4196"
 )
 
+type APICfg struct {
+	Address string `json:"address"`
+}
+
 func (d *Daemon) initAPI() error {
+	if d.Cfg.API == nil {
+		return nil
+	}
+
 	server := d.HTTPServers["daemon-api"]
 
 	server.Router.Mount("/debug", middleware.Profiler())
