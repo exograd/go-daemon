@@ -79,8 +79,12 @@ func (p *Pointer) UnmarshalJSON(data []byte) error {
 	return p.Parse(s)
 }
 
-func (p *Pointer) Append(token string) {
-	*p = append(*p, token)
+func (p *Pointer) Prepend(tokens ...string) {
+	*p = append(Pointer(tokens), *p...)
+}
+
+func (p *Pointer) Append(tokens ...string) {
+	*p = append(*p, tokens...)
 }
 
 func (p Pointer) Parent() Pointer {
