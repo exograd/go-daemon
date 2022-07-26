@@ -35,12 +35,12 @@ var TemplateFuncMap = map[string]interface{}{
 func LoadCfg(filePath string, dest interface{}) error {
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("cannot read %s: %w", filePath, err)
+		return fmt.Errorf("cannot read %q: %w", filePath, err)
 	}
 
 	data2, err := RenderCfg(data)
 	if err != nil {
-		return fmt.Errorf("cannot render %s: %w", filePath, err)
+		return fmt.Errorf("cannot render %q: %w", filePath, err)
 	}
 
 	decoder := yaml.NewDecoder(bytes.NewReader(data2))

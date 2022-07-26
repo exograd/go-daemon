@@ -122,7 +122,7 @@ func (s *Server) Start() error {
 		return fmt.Errorf("cannot listen on %q: %w", s.Cfg.Address, err)
 	}
 
-	s.Log.Info("listening on %s", s.Cfg.Address)
+	s.Log.Info("listening on %q", s.Cfg.Address)
 
 	go func() {
 		var err error
