@@ -15,7 +15,8 @@
 package daemon
 
 type Service interface {
-	ServiceCfg() interface{}
+	DefaultServiceCfg() interface{}
+	ValidateServiceCfg() error
 	DaemonCfg() (DaemonCfg, error)
 	Init(*Daemon) error
 	Start(*Daemon) error

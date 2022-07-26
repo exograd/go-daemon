@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/exograd/go-daemon/daemon"
 	"github.com/exograd/go-daemon/dhttp"
-	"github.com/exograd/go-daemon/influx"
 	"github.com/exograd/go-daemon/dlog"
+	"github.com/exograd/go-daemon/influx"
 )
 
 type ServiceCfg struct {
@@ -23,12 +23,16 @@ func NewService() *Service {
 	return s
 }
 
-func (s *Service) ServiceCfg() interface{} {
+func (s *Service) DefaultServiceCfg() interface{} {
 	cfg := ServiceCfg{}
 
 	s.Cfg = cfg
 
 	return &s.Cfg
+}
+
+func (s *Service) ValidateServiceCfg() error {
+	return nil
 }
 
 func (s *Service) DaemonCfg() (daemon.DaemonCfg, error) {

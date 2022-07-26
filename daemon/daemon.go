@@ -351,13 +351,19 @@ func Run(name, description string, service Service) {
 	p.ParseCommandLine()
 
 	// Configuration
-	serviceCfg := service.ServiceCfg()
+	serviceCfg := service.DefaultServiceCfg()
 
 	if p.IsOptionSet("cfg-file") {
 		cfgPath := p.OptionValue("cfg-file")
 
+		p.Info("loading configuration from %q", cfgPath)
+
 		if err := LoadCfg(cfgPath, serviceCfg); err != nil {
 			p.Fatal("cannot load configuration: %v", err)
+		}
+
+		if err := service.ValidateServiceCfg(); err != nil {
+			p.Fatal("invalid configuration: %v", err)
 		}
 	}
 
@@ -392,11 +398,15 @@ func RunTest(name string, service Service, cfgPath string, readyChan chan<- stru
 	}
 
 	// Configuration
-	serviceCfg := service.ServiceCfg()
+	serviceCfg := service.DefaultServiceCfg()
 
 	if cfgPath != "" {
 		if err := LoadCfg(cfgPath, serviceCfg); err != nil {
 			abort("cannot load configuration: %v", err)
+		}
+
+		if err := service.ValidateServiceCfg(); err != nil {
+			abort("invalid configuration: %v", err)
 		}
 	}
 
