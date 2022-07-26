@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/exograd/go-daemon/check"
 	"github.com/exograd/go-daemon/dlog"
 )
 
@@ -52,6 +53,28 @@ type Client struct {
 	Client *http.Client
 
 	tlsCfg *tls.Config
+}
+
+func (cfg *ClientCfg) Check(c *check.Checker) {
+	c.CheckOptionalObject("tls", cfg.TLS)
+}
+
+func (cfg *TLSClientCfg) Check(c *check.Checker) {
+	c.WithChild("ca_certificates", func() {
+		for i, cert := range cfg.CACertificates {
+			c.CheckStringNotEmpty(i, cert)
+		}
+	})
+
+	c.WithChild("public_key_pins", func() {
+		for serverName, pins := range cfg.PublicKeyPins {
+			c.WithChild(serverName, func() {
+				for i, pin := range pins {
+					c.CheckStringNotEmpty(i, pin)
+				}
+			})
+		}
+	})
 }
 
 func NewClient(cfg ClientCfg) (*Client, error) {

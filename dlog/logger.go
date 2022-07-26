@@ -21,6 +21,8 @@ import (
 	"log"
 	"strings"
 	"time"
+
+	"github.com/exograd/go-daemon/check"
 )
 
 type LoggerCfg struct {
@@ -36,6 +38,9 @@ type Logger struct {
 	Domain     string
 	Data       Data
 	DebugLevel int
+}
+
+func (cfg *LoggerCfg) Check(c *check.Checker) {
 }
 
 func DefaultLogger(name string) *Logger {

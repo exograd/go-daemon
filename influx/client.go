@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/exograd/go-daemon/check"
 	"github.com/exograd/go-daemon/dhttp"
 	"github.com/exograd/go-daemon/dlog"
 )
@@ -39,6 +40,13 @@ type ClientCfg struct {
 	BatchSize   int               `json:"batch_size"`
 	Tags        map[string]string `json:"tags"`
 	LogRequests bool              `json:"log_requests"`
+}
+
+func (cfg *ClientCfg) Check(c *check.Checker) {
+	c.CheckStringURI("uri", cfg.URI)
+	c.CheckStringNotEmpty("bucket", cfg.Bucket)
+	c.CheckStringNotEmpty("org", cfg.Org)
+	c.CheckIntMin("batch_size", cfg.BatchSize, 1)
 }
 
 func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {

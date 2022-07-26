@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/exograd/go-daemon/check"
 	"github.com/exograd/go-daemon/dlog"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -38,6 +39,18 @@ type ClientCfg struct {
 
 	SchemaDirectory string   `json:"schema_directory"`
 	SchemaNames     []string `json:"schema_names"`
+}
+
+func (cfg *ClientCfg) Check(c *check.Checker) {
+	c.CheckStringURI("uri", cfg.URI)
+
+	c.CheckStringNotEmpty("schema_directory", cfg.SchemaDirectory)
+
+	c.WithChild("schema_names", func() {
+		for i, name := range cfg.SchemaNames {
+			c.CheckStringNotEmpty(i, name)
+		}
+	})
 }
 
 type Client struct {

@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/exograd/go-daemon/check"
 	"github.com/exograd/go-daemon/dlog"
 	"github.com/exograd/go-daemon/ksuid"
 	"github.com/go-chi/chi/v5"
@@ -66,6 +67,16 @@ type Server struct {
 	stopChan  chan struct{}
 	errorChan chan error
 	wg        sync.WaitGroup
+}
+
+func (cfg *ServerCfg) Check(c *check.Checker) {
+	c.CheckStringNotEmpty("address", cfg.Address)
+	c.CheckOptionalObject("tls", cfg.TLS)
+}
+
+func (cfg *TLSServerCfg) Check(c *check.Checker) {
+	c.CheckStringNotEmpty("certificate", cfg.Certificate)
+	c.CheckOptionalObject("private_key", cfg.PrivateKey)
 }
 
 func NewServer(cfg ServerCfg) (*Server, error) {

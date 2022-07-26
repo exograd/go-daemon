@@ -14,7 +14,10 @@
 
 package daemon
 
-import "github.com/go-chi/chi/v5/middleware"
+import (
+	"github.com/exograd/go-daemon/check"
+	"github.com/go-chi/chi/v5/middleware"
+)
 
 const (
 	DefaultAPIAddress = "localhost:4196"
@@ -22,6 +25,11 @@ const (
 
 type APICfg struct {
 	Address string `json:"address"`
+}
+
+func (cfg *APICfg) Check(c *check.Checker) {
+	// We do not check that the address is not empty since we accept an empty
+	// value and replace it with DefaultAPIAddress.
 }
 
 func (d *Daemon) initAPI() error {
