@@ -98,6 +98,10 @@ func (h *Handler) JSONRequestData(dest interface{}) error {
 }
 
 func (h *Handler) JSONRequestObject(obj check.Object) error {
+	return h.JSONRequestObject2(obj, nil)
+}
+
+func (h *Handler) JSONRequestObject2(obj check.Object, fn func(*check.Checker)) error {
 	if err := h.JSONRequestData(obj); err != nil {
 		return err
 	}
@@ -105,6 +109,11 @@ func (h *Handler) JSONRequestObject(obj check.Object) error {
 	checker := check.NewChecker()
 
 	obj.Check(checker)
+
+	if fn != nil {
+		fn(checker)
+	}
+
 	if err := checker.Error(); err != nil {
 		h.ReplyRequestBodyValidationErrors(checker.Errors)
 		return fmt.Errorf("invalid request body: %w", err)
