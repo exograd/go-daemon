@@ -76,7 +76,7 @@ func (cfg *ServerCfg) Check(c *check.Checker) {
 
 func (cfg *TLSServerCfg) Check(c *check.Checker) {
 	c.CheckStringNotEmpty("certificate", cfg.Certificate)
-	c.CheckOptionalObject("private_key", cfg.PrivateKey)
+	c.CheckStringNotEmpty("private_key", cfg.PrivateKey)
 }
 
 func NewServer(cfg ServerCfg) (*Server, error) {
