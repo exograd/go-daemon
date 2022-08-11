@@ -43,10 +43,14 @@ type ClientCfg struct {
 }
 
 func (cfg *ClientCfg) Check(c *check.Checker) {
+	// The organization is optional (it is only used for InfluxDB 2.x)
+
 	c.CheckStringURI("uri", cfg.URI)
 	c.CheckStringNotEmpty("bucket", cfg.Bucket)
-	c.CheckStringNotEmpty("org", cfg.Org)
-	c.CheckIntMin("batch_size", cfg.BatchSize, 1)
+
+	if cfg.BatchSize != 0 {
+		c.CheckIntMin("batch_size", cfg.BatchSize, 1)
+	}
 }
 
 func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {
