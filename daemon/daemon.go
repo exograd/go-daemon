@@ -347,6 +347,8 @@ func Run(name, description string, service Service) {
 
 	p.AddOption("c", "cfg-file", "path", "",
 		"the path of the configuration file")
+	p.AddFlag("", "validate-cfg",
+		"validate the configuration and exit")
 
 	p.ParseCommandLine()
 
@@ -373,6 +375,11 @@ func Run(name, description string, service Service) {
 	}
 
 	daemonCfg.name = name
+
+	if p.IsOptionSet("validate-cfg") {
+		p.Info("configuration validated successfully")
+		return
+	}
 
 	// Daemon
 	d := newDaemon(daemonCfg, service)
