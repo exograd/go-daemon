@@ -43,10 +43,10 @@ func LoadCfg(filePath string, dest interface{}) error {
 		return fmt.Errorf("cannot render %q: %w", filePath, err)
 	}
 
-	decoder := yaml.NewDecoder(bytes.NewReader(data2))
+	yamlDecoder := yaml.NewDecoder(bytes.NewReader(data2))
 
 	var yamlValue interface{}
-	if err := decoder.Decode(&yamlValue); err != nil && err != io.EOF {
+	if err := yamlDecoder.Decode(&yamlValue); err != nil && err != io.EOF {
 		return fmt.Errorf("cannot decode yaml data: %w", err)
 	}
 
@@ -60,7 +60,10 @@ func LoadCfg(filePath string, dest interface{}) error {
 		return fmt.Errorf("cannot generate json data: %w", err)
 	}
 
-	if err := json.Unmarshal(jsonData, dest); err != nil {
+	jsonDecoder := json.NewDecoder(bytes.NewReader(jsonData))
+	jsonDecoder.DisallowUnknownFields()
+
+	if err := jsonDecoder.Decode(dest); err != nil {
 		return fmt.Errorf("cannot decode json data: %w", err)
 	}
 
