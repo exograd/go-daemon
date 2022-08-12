@@ -92,7 +92,7 @@ func newDaemon(cfg DaemonCfg, service Service) *Daemon {
 		service: service,
 
 		stopChan:  make(chan struct{}, 1),
-		errorChan: make(chan error, 1),
+		errorChan: make(chan error),
 	}
 
 	return d
@@ -170,6 +170,7 @@ func (d *Daemon) initHTTPServers() error {
 
 	for name, cfg := range d.Cfg.HTTPServers {
 		cfg.Log = d.Log.Child("http-server", dlog.Data{"server": name})
+		cfg.ErrorChan = d.errorChan
 
 		server, err := dhttp.NewServer(cfg)
 		if err != nil {
@@ -335,10 +336,6 @@ func (d *Daemon) terminate() {
 
 	close(d.stopChan)
 	close(d.errorChan)
-}
-
-func (d *Daemon) fatal(err error) {
-	d.errorChan <- err
 }
 
 func Run(name, description string, service Service) {

@@ -41,7 +41,8 @@ type RouteFunc func(*Handler)
 type ErrorHandler func(*Handler, int, string, string, APIErrorData)
 
 type ServerCfg struct {
-	Log *dlog.Logger `json:"-"`
+	Log       *dlog.Logger `json:"-"`
+	ErrorChan chan<- error `json:"-"`
 
 	ErrorHandler ErrorHandler `json:"-"`
 
@@ -65,7 +66,7 @@ type Server struct {
 	Router *chi.Mux
 
 	stopChan  chan struct{}
-	errorChan chan error
+	errorChan chan<- error
 	wg        sync.WaitGroup
 }
 
@@ -84,6 +85,10 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 		cfg.Log = dlog.DefaultLogger("http-server")
 	}
 
+	if cfg.ErrorChan == nil {
+		return nil, fmt.Errorf("missing error channel")
+	}
+
 	if cfg.Address == "" {
 		cfg.Address = "localhost:8080"
 	}
@@ -93,7 +98,7 @@ func NewServer(cfg ServerCfg) (*Server, error) {
 		Log: cfg.Log,
 
 		stopChan:  make(chan struct{}),
-		errorChan: make(chan error),
+		errorChan: cfg.ErrorChan,
 	}
 
 	s.Router = chi.NewMux()
@@ -138,7 +143,9 @@ func (s *Server) Start() error {
 
 		if err != nil {
 			if err != http.ErrServerClosed {
-				s.errorChan <- err
+				s.Log.Error("cannot serve: %v", err)
+				err2 := fmt.Errorf("http server initialization failed: %w", err)
+				s.errorChan <- err2
 			}
 		}
 	}()
@@ -155,7 +162,6 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) Terminate() {
-	close(s.errorChan)
 }
 
 func (s *Server) main() {
@@ -166,9 +172,6 @@ func (s *Server) main() {
 	select {
 	case <-s.stopChan:
 		s.shutdown()
-
-	case err := <-s.errorChan:
-		s.Log.Error("server error: %v", err)
 	}
 }
 
