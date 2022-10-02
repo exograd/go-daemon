@@ -234,6 +234,12 @@ func (h *Handler) logRequest() {
 	req := h.Request
 	w := h.ResponseWriter.(*ResponseWriter)
 
+	if h.Server.Cfg.HideSuccessfulRequests {
+		if w.Status >= 100 && w.Status < 400 {
+			return
+		}
+	}
+
 	reqTime := time.Since(h.StartTime)
 	seconds := reqTime.Seconds()
 

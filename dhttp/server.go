@@ -50,7 +50,8 @@ type ServerCfg struct {
 
 	TLS *TLSServerCfg `json:"tls,omitempty"`
 
-	HideInternalErrors bool `json:"hide_internal_errors"`
+	HideInternalErrors     bool `json:"hide_internal_errors"`
+	HideSuccessfulRequests bool `json:"hide_successful_requests"`
 }
 
 type TLSServerCfg struct {
