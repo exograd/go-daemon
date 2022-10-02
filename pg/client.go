@@ -35,7 +35,8 @@ const (
 type ClientCfg struct {
 	Log *dlog.Logger `json:"-"`
 
-	URI string `json:"uri"`
+	URI             string `json:"uri"`
+	ApplicationName string `json:"application_name,omitempty"`
 
 	SchemaDirectory string   `json:"schema_directory"`
 	SchemaNames     []string `json:"schema_names"`
@@ -74,6 +75,11 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 	poolCfg, err := pgxpool.ParseConfig(cfg.URI)
 	if err != nil {
 		return nil, fmt.Errorf("invalid url: %w", err)
+	}
+
+	if cfg.ApplicationName != "" {
+		runtimeParams := poolCfg.ConnConfig.RuntimeParams
+		runtimeParams["application_name"] = cfg.ApplicationName
 	}
 
 	ctx := context.Background()
