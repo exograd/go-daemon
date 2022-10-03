@@ -256,7 +256,7 @@ func (h *Handler) logRequest() {
 	if w.ResponseBodySize < 1000 {
 		resSizeString = fmt.Sprintf("%dB", w.ResponseBodySize)
 	} else if w.ResponseBodySize < 1_000_000 {
-		resSizeString = fmt.Sprintf("%.1fKB", float64(w.ResponseBodySize)/1e3)
+		resSizeString = fmt.Sprintf("%.1fkB", float64(w.ResponseBodySize)/1e3)
 	} else if w.ResponseBodySize < 1_000_000_000 {
 		resSizeString = fmt.Sprintf("%.1fMB", float64(w.ResponseBodySize)/1e6)
 	} else {
