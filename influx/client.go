@@ -51,6 +51,12 @@ func (cfg *ClientCfg) Check(c *check.Checker) {
 	if cfg.BatchSize != 0 {
 		c.CheckIntMin("batch_size", cfg.BatchSize, 1)
 	}
+
+	c.WithChild("tags", func() {
+		for name, value := range cfg.Tags {
+			c.CheckStringNotEmpty(name, value)
+		}
+	})
 }
 
 func HTTPClientCfg(cfg *ClientCfg) dhttp.ClientCfg {
@@ -100,7 +106,9 @@ func NewClient(cfg ClientCfg) (*Client, error) {
 	}
 
 	tags := make(map[string]string)
-	tags["host"] = cfg.Hostname
+	if cfg.Hostname != "" {
+		tags["host"] = cfg.Hostname
+	}
 	for name, value := range cfg.Tags {
 		tags[name] = value
 	}
