@@ -256,9 +256,10 @@ func (c *Client) sendPoints(points Points) error {
 
 		bodyString := ""
 		if bodyData != nil {
-			// Influx can send incredibly long error messages, sometimes including
-			// the entire payload received. This is very annoying, but even if it
-			// was to be patched, we would still have to support old versions.
+			// Influx can send incredibly long error messages, sometimes
+			// including the entire payload received. This is very annoying,
+			// but even if it was to be patched, we would still have to
+			// support old versions.
 			if len(bodyData) > 200 {
 				bodyData = append(bodyData[:200], []byte(" [truncated]")...)
 			}
