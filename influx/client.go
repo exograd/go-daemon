@@ -199,11 +199,15 @@ func (c *Client) finalizePoint(point *Point) {
 	tags := Tags{}
 
 	for key, value := range c.tags {
-		tags[key] = value
+		if value != "" {
+			tags[key] = value
+		}
 	}
 
 	for key, value := range point.Tags {
-		tags[key] = value
+		if value != "" {
+			tags[key] = value
+		}
 	}
 
 	point.Tags = tags
