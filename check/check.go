@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/exograd/go-daemon/djson"
 )
@@ -233,6 +234,41 @@ func (c *Checker) CheckStringURI(token interface{}, s string) bool {
 	} else if _, err := url.Parse(s); err != nil {
 		c.AddError(token, "invalid_uri_format", "string must be a valid uri")
 		return false
+	}
+
+	return true
+}
+
+func (c *Checker) CheckStringHTTPURI(token interface{}, s string) bool {
+	if s == "" {
+		c.AddError(token, "empty_uri", "string must be a valid http uri")
+		return false
+	} else {
+		url, err := url.Parse(s)
+		if err != nil {
+			c.AddError(token, "invalid_uri_format",
+				"string must be a valid http uri")
+			return false
+		}
+
+		scheme := strings.ToLower(url.Scheme)
+		if scheme == "" {
+			c.AddError(token, "missing_uri_scheme",
+				"string must be a valid http uri")
+			return false
+		}
+
+		if scheme != "http" && scheme != "https" {
+			c.AddError(token, "invalid_uri_scheme",
+				"string must be a valid http uri")
+			return false
+		}
+
+		if url.Host == "" {
+			c.AddError(token, "missing_uri_host",
+				"string must be a valid http uri with a non-empty host")
+			return false
+		}
 	}
 
 	return true
